@@ -1,0 +1,90 @@
+api_version: aliprompt.ai/v1
+kind: HookPipeline
+metadata:
+  id: learning_funnel
+  version: 1.0.0
+  event_schema: ../schemas/hook-event.schema.json
+defaults:
+  ordered_by: priority_ascending
+  commercial_pressure: forbidden
+  advancement_requires_evidence: true
+handlers:
+  - id: require_teach_back
+    event: agent.output_validated
+    priority: 50
+    implementation: runtime.learning.require_teach_back
+    applies_when: >-
+      payload.agent_id in [prompt_coach, assistant_trainer] and
+      payload.validated_output.status != refused
+    reads: [payload.validated_output]
+    writes: [payload.learning_checkpoint]
+    rule: >-
+      Specialist output must contain one teach-back question tied to the current
+      objective before the UI offers the next learning stage.
+    on_error: inject_generic_teach_back_not_advance
+    error_code: TEACH_BACK_REQUIRED
+
+  - id: route_submitted_answer_to_evaluator
+    event: learning.answer_submitted
+    priority: 10
+    implementation: runtime.learning.route_evaluator
+    reads:
+      - payload.stage_id
+      - payload.learning_objectives
+      - payload.rubric
+      - payload.sanitized_answer
+      - payload.prior_attempts
+    writes: [payload.evaluator_request]
+    rule: >-
+      Only the Learning Evaluator may mark a criterion mastered. A button click,
+      elapsed time or user self-assertion cannot mark mastery.
+    on_error: keep_stage_locked
+    error_code: EVALUATION_UNAVAILABLE
+
+  - id: enforce_mastery_gate
+    event: learning.stage_evaluated
+    priority: 20
+    implementation: runtime.learning.mastery_gate
+    reads: [payload.stage_status, payload.criteria, payload.next_action]
+    writes: [payload.stage_access]
+    rule: >-
+      Unlock the next stage only when stage_status is mastered and every required
+      criterion is mastered; otherwise preserve progress and show the next question.
+    on_error: keep_stage_locked
+    error_code: MASTERY_GATE_FAILED
+
+  - id: validate_phase_signal
+    event: phase.signal_emitted
+    priority: 10
+    implementation: runtime.funnel.phase_evidence
+    reads: [payload.source_agent, payload.signal, payload.observed_evidence]
+    writes: [payload.phase_decision]
+    configuration:
+      phase_2_requires_any:
+        - repeated_inconsistent_behavior
+        - persistent_role_or_tone_needed
+        - reusable_knowledge_and_examples_needed
+      phase_3_requires_all_categories:
+        - repeatable_workflow
+        - measurable_outcome
+        - trigger_or_frequency
+        - data_or_tool_boundary
+        - approval_or_failure_path
+    rule: >-
+      Treat a phase signal as a recommendation, never enrollment. Reject a higher
+      phase recommendation when its evidence threshold is not met.
+    on_error: suppress_phase_recommendation
+    error_code: PHASE_EVIDENCE_INSUFFICIENT
+
+  - id: require_user_choice_for_offer
+    event: offer.before_render
+    priority: 20
+    implementation: runtime.funnel.offer_consent
+    reads: [payload.phase_decision, payload.offer, payload.user_intent]
+    writes: [payload.offer_render_decision]
+    rule: >-
+      Show only an active catalog offer matching a validated need, and make clear
+      that the user chooses whether to learn more. Never create urgency or scarcity
+      unless the server catalog explicitly supplies a verified fact.
+    on_error: suppress_offer
+    error_code: OFFER_NOT_ELIGIBLE

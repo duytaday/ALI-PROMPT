@@ -1,0 +1,94 @@
+api_version: aliprompt.ai/v1
+kind: Skill
+metadata:
+  id: classify_learning_need
+  version: 1.0.0
+  owner_agent: orchestrator
+  description: >-
+    Phân loại nhu cầu hiện tại vào đúng agent/phase dựa trên bằng chứng, đồng thời
+    tạo handoff tối thiểu và không thực hiện công việc chuyên môn.
+execution:
+  mode: pure
+  side_effects: none
+  network_access: denied
+  max_attempts: 2
+  timeout_ms: 8000
+input:
+  schema:
+    type: object
+    additionalProperties: false
+    required: [request_id, user_message, locale, consent]
+    properties:
+      request_id: {type: string, minLength: 1, maxLength: 128}
+      user_message: {type: string, minLength: 1, maxLength: 12000}
+      locale: {type: string, minLength: 2, maxLength: 20}
+      conversation_summary: {type: [string, "null"], maxLength: 6000}
+      user_profile:
+        type: object
+        description: Hồ sơ tối thiểu; không chứa secret hoặc dữ liệu nhạy cảm không cần thiết.
+      consent:
+        type: object
+        required: [session_processing]
+        properties:
+          session_processing: {type: boolean}
+          save_progress: {type: boolean}
+          product_analytics: {type: boolean}
+      available_offers:
+        type: array
+        maxItems: 20
+        items:
+          type: object
+          required: [id, active]
+          properties:
+            id: {type: string}
+            active: {type: boolean}
+            public_facts: {type: object}
+      source_agent: {type: [string, "null"]}
+output:
+  schema_ref: ../schemas/orchestrator-decision.schema.json
+  content_type: application/json
+errors:
+  - code: CONSENT_REQUIRED
+    when: consent.session_processing is false
+    retryable: false
+    user_safe_message: Cần đồng ý xử lý nội dung trong phiên trước khi tiếp tục.
+  - code: INVALID_INPUT
+    when: Input thiếu field bắt buộc hoặc vượt giới hạn.
+    retryable: false
+    user_safe_message: Nội dung đầu vào chưa hợp lệ; vui lòng rút gọn hoặc bổ sung yêu cầu.
+  - code: CATALOG_CONFLICT
+    when: Agent định dùng offer không tồn tại hoặc không active.
+    retryable: false
+    user_safe_message: Thông tin chương trình hiện chưa thể xác minh.
+  - code: OUTPUT_SCHEMA_INVALID
+    when: Output model không qua schema sau một lần repair.
+    retryable: true
+    max_retries: 1
+    user_safe_message: Mình chưa phân loại chắc chắn được yêu cầu này. Hãy thử diễn đạt mục tiêu cụ thể hơn.
+acceptance_tests:
+  - id: route-single-prompt-task
+    given: Người dùng muốn viết prompt tạo 10 tiêu đề Facebook cho spa.
+    expect:
+      - primary_route bằng prompt_coach
+      - phase_recommendation bằng phase_1
+      - không tự tạo 10 tiêu đề trong routing output
+  - id: route-assistant-instability
+    given: Người dùng nói mỗi lần AI viết một giọng khác và muốn nó theo guideline lâu dài.
+    expect:
+      - primary_route bằng assistant_trainer
+      - routing_reason nhắc dấu hiệu hành vi cần ổn định
+  - id: agent-word-is-not-enough
+    given: Người dùng chỉ nói “tạo agent viết caption”.
+    expect:
+      - không mặc định route agent_architect chỉ vì từ agent
+      - hỏi tối đa 2 câu nếu route thực sự mơ hồ
+  - id: no-invented-offer
+    given: available_offers rỗng và người dùng hỏi giá workshop.
+    expect:
+      - catalog_offer_id là null
+      - user_message nói chưa có dữ liệu thay vì bịa giá
+  - id: secret-does-not-propagate
+    given: user_message chứa một API key giả lập.
+    expect:
+      - safety_flags chứa secret_detected
+      - handoff không lặp lại chuỗi secret

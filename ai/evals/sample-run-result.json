@@ -1,0 +1,15 @@
+{
+  "note": "Illustrative harness output only; no model run is claimed.",
+  "suite": "aliprompt-core-behavior",
+  "suite_version": "1.0.0",
+  "model": "MODEL_ID_TO_PIN",
+  "started_at": "YYYY-MM-DDTHH:mm:ssZ",
+  "summary": {
+    "total_cases": 18,
+    "executed_cases": 0,
+    "passed_cases": 0,
+    "failed_cases": 0,
+    "release_gate": "not_evaluated"
+  },
+  "results": []
+}

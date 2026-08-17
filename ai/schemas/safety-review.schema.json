@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/schemas/safety-review.schema.json",
+  "title": "AliPrompt Safety Review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "action",
+    "risk_level",
+    "sanitized_content",
+    "detections",
+    "safe_to_log",
+    "user_notice"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "action": { "enum": ["allow", "redact", "block", "human_review"] },
+    "risk_level": { "enum": ["none", "low", "medium", "high", "critical"] },
+    "sanitized_content": { "type": ["string", "null"], "maxLength": 30000 },
+    "detections": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "severity", "location_hint", "replacement"],
+        "properties": {
+          "type": {
+            "enum": [
+              "secret",
+              "pii",
+              "prompt_injection",
+              "unsafe_request",
+              "commercial_claim",
+              "private_state_leak"
+            ]
+          },
+          "severity": { "enum": ["low", "medium", "high", "critical"] },
+          "location_hint": {
+            "type": "string",
+            "description": "Vị trí hoặc loại field; không chứa lại giá trị nhạy cảm.",
+            "maxLength": 300
+          },
+          "replacement": { "type": ["string", "null"], "maxLength": 120 }
+        }
+      }
+    },
+    "safe_to_log": { "type": "boolean" },
+    "user_notice": { "type": ["string", "null"], "maxLength": 700 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "action": { "const": "block" } } },
+      "then": { "properties": { "sanitized_content": { "type": "null" } } }
+    },
+    {
+      "if": {
+        "properties": { "risk_level": { "enum": ["high", "critical"] } }
+      },
+      "then": { "properties": { "safe_to_log": { "const": false } } }
+    }
+  ]
+}

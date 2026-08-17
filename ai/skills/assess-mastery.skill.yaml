@@ -1,0 +1,103 @@
+api_version: aliprompt.ai/v1
+kind: Skill
+metadata:
+  id: assess_mastery
+  version: 1.0.0
+  owner_agent: learning_evaluator
+  description: >-
+    Chấm bằng chứng học tập theo criterion, chỉ mở cổng khi mọi criterion bắt buộc
+    đã đạt và tạo một câu hỏi kế tiếp không làm lộ đáp án.
+execution:
+  mode: pure
+  side_effects: none
+  network_access: denied
+  max_attempts: 2
+  timeout_ms: 10000
+input:
+  schema:
+    type: object
+    additionalProperties: false
+    required: [request_id, stage_id, learning_objectives, rubric, locale, user_level]
+    properties:
+      request_id: {type: string, minLength: 1, maxLength: 128}
+      stage_id: {type: string, minLength: 1, maxLength: 128}
+      learning_objectives:
+        type: array
+        minItems: 1
+        maxItems: 20
+        items:
+          type: object
+          required: [criterion_id, statement, required]
+          properties:
+            criterion_id: {type: string}
+            statement: {type: string, maxLength: 700}
+            required: {type: boolean}
+      rubric:
+        type: array
+        minItems: 1
+        maxItems: 20
+        items: {type: object}
+      evidence:
+        type: array
+        maxItems: 30
+        items: {type: string, maxLength: 5000}
+      latest_user_answer: {type: [string, "null"], maxLength: 8000}
+      prior_attempts:
+        type: array
+        maxItems: 20
+        items: {type: object}
+      question_mode: {enum: [auto, open_ended, multiple_choice, scenario]}
+      user_level: {enum: [beginner, intermediate, advanced]}
+      locale: {type: string, minLength: 2, maxLength: 20}
+      source_summary: {type: [string, "null"], maxLength: 6000}
+output:
+  schema_ref: ../schemas/learning-evaluation.schema.json
+  content_type: application/json
+  private_fields:
+    - /private_state
+errors:
+  - code: RUBRIC_REQUIRED
+    when: Learning objectives không có rubric tương ứng.
+    retryable: false
+    user_safe_message: Bài học chưa có tiêu chí chấm rõ; chưa thể xác nhận mức hiểu.
+  - code: EVIDENCE_TOO_SENSITIVE
+    when: Bằng chứng chứa secret hoặc PII không cần thiết.
+    retryable: false
+    user_safe_message: Hãy gửi lại bài làm đã ẩn dữ liệu nhạy cảm.
+  - code: ANSWER_LEAK_RISK
+    when: user_view chứa expected concepts hoặc đáp án đúng.
+    retryable: true
+    max_retries: 1
+    user_safe_message: Câu hỏi kiểm tra đang được tạo lại để không làm lộ đáp án.
+  - code: OUTPUT_SCHEMA_INVALID
+    when: Output không qua schema sau một lần repair.
+    retryable: true
+    max_retries: 1
+    user_safe_message: Chưa thể chấm lượt này; câu trả lời của bạn vẫn được giữ trong phiên.
+acceptance_tests:
+  - id: confidence-is-not-evidence
+    given: Người dùng chỉ trả lời “em hiểu hết rồi”.
+    expect:
+      - stage_status không bằng mastered
+      - next_action bằng collect_evidence hoặc retry
+      - câu hỏi yêu cầu giải thích hoặc áp dụng
+  - id: all-required-criteria
+    given: Hai trên ba criterion required đã mastered.
+    expect:
+      - stage_status bằng in_progress
+      - không advance
+  - id: no-answer-in-user-view
+    given: question_mode bằng multiple_choice.
+    expect:
+      - user_view.question có options nhưng không có đáp án đúng
+      - correct_option_id chỉ nằm trong private_state
+  - id: one-gap-at-a-time
+    given: Có năm lỗ hổng trong evidence.
+    expect:
+      - priority_gaps có nhiều nhất 2 phần tử
+      - user_view chỉ hỏi đúng một câu kế tiếp
+  - id: detects-dangerous-misconception
+    given: Người dùng nói có thể dán API key vào prompt nếu bảo AI giữ bí mật.
+    expect:
+      - criterion liên quan safety không mastered
+      - teaching_hint sửa kỳ vọng về secret

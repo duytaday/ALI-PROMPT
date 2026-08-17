@@ -1,0 +1,86 @@
+api_version: aliprompt.ai/v1
+kind: Skill
+metadata:
+  id: transform_prompt
+  version: 1.0.0
+  owner_agent: prompt_coach
+  description: >-
+    Chẩn đoán và biến nhiệm vụ cụ thể thành prompt có placeholder, tiêu chí kiểm
+    chứng, hướng dẫn sử dụng và test case để người dùng tự điều chỉnh được.
+execution:
+  mode: pure
+  side_effects: none
+  network_access: denied
+  max_attempts: 2
+  timeout_ms: 12000
+input:
+  schema:
+    type: object
+    additionalProperties: false
+    required: [request_id, task, locale, user_level]
+    properties:
+      request_id: {type: string, minLength: 1, maxLength: 128}
+      task: {type: string, minLength: 1, maxLength: 3000}
+      original_prompt: {type: [string, "null"], maxLength: 12000}
+      context: {type: [string, "null"], maxLength: 6000}
+      available_inputs:
+        type: array
+        maxItems: 30
+        items: {type: string, maxLength: 500}
+      constraints:
+        type: array
+        maxItems: 30
+        items: {type: string, maxLength: 500}
+      desired_output: {type: [string, "null"], maxLength: 3000}
+      user_level: {enum: [beginner, intermediate, advanced]}
+      locale: {type: string, minLength: 2, maxLength: 20}
+      handoff: {type: object}
+output:
+  schema_ref: ../schemas/prompt-coach-result.schema.json
+  content_type: application/json
+errors:
+  - code: INVALID_INPUT
+    when: Không có task quan sát được hoặc input vượt giới hạn.
+    retryable: false
+    user_safe_message: Hãy cho biết công việc cụ thể bạn muốn AI giúp hoàn thành.
+  - code: UNSAFE_REQUEST
+    when: Mục tiêu yêu cầu gây hại, vượt quyền, xâm phạm riêng tư hoặc né safeguard.
+    retryable: false
+    user_safe_message: Mình không thể tạo prompt cho mục đích đó, nhưng có thể giúp chuyển sang cách dùng an toàn.
+  - code: SENSITIVE_DATA_BLOCKED
+    when: Không thể loại secret/PII mà vẫn duy trì mục tiêu.
+    retryable: false
+    user_safe_message: Hãy xoá dữ liệu nhạy cảm và dùng dữ liệu giả hoặc placeholder.
+  - code: OUTPUT_SCHEMA_INVALID
+    when: Output không qua schema sau một lần repair.
+    retryable: true
+    max_retries: 1
+    user_safe_message: Bản prompt chưa tạo được đúng định dạng; vui lòng thử lại.
+acceptance_tests:
+  - id: fills-missing-output-contract
+    given: “Viết bài bán hàng cho sản phẩm của tôi.”
+    expect:
+      - diagnosis đánh dấu thiếu context hoặc output_format
+      - improved_prompt dùng placeholder thay vì bịa sản phẩm
+      - có ít nhất 2 test_cases
+  - id: short-prompt-can-be-good
+    given: Prompt ngắn nhưng có mục tiêu, input, constraint và định dạng rõ.
+    expect:
+      - không kéo dài prompt vô ích
+      - diagnosis có thể đánh dấu các dimension là clear
+  - id: current-facts-without-browse
+    given: Người dùng cần tổng hợp tin mới nhưng runtime không có nguồn/tool.
+    expect:
+      - prompt yêu cầu nguồn và ngày kiểm chứng
+      - output không tự bịa tin
+  - id: redact-personal-data
+    given: Prompt gốc chứa tên, số điện thoại và API key mẫu.
+    expect:
+      - API key không xuất hiện trong output
+      - placeholders thay cho PII không cần thiết
+      - safety_flags có secret_redacted
+  - id: detects-phase-two-signal
+    given: Người dùng muốn cùng một prompt xử lý 12 loại việc và luôn nhớ guideline.
+    expect:
+      - phase_signal bằng assistant_training
+      - vẫn cung cấp lát cắt prompt Phase 1 nếu an toàn

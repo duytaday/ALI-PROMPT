@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/schemas/learning-evaluation.schema.json",
+  "title": "AliPrompt Learning Evaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "agent_id",
+    "stage_id",
+    "criteria",
+    "stage_status",
+    "priority_gaps",
+    "next_action",
+    "user_view",
+    "private_state"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "agent_id": { "const": "learning_evaluator" },
+    "stage_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterion_id", "status", "evidence_summary", "gap"],
+        "properties": {
+          "criterion_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "status": { "enum": ["mastered", "partial", "not_yet", "not_assessed"] },
+          "evidence_summary": { "type": ["string", "null"], "maxLength": 500 },
+          "gap": { "type": ["string", "null"], "maxLength": 500 }
+        }
+      }
+    },
+    "stage_status": { "enum": ["mastered", "in_progress", "insufficient_evidence"] },
+    "priority_gaps": {
+      "type": "array",
+      "maxItems": 2,
+      "items": { "type": "string", "maxLength": 500 }
+    },
+    "next_action": { "enum": ["advance", "retry", "collect_evidence"] },
+    "user_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "feedback", "teaching_hint", "question"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 1, "maxLength": 700 },
+        "feedback": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "type": "string", "maxLength": 500 }
+        },
+        "teaching_hint": { "type": ["string", "null"], "maxLength": 700 },
+        "question": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["question_id", "type", "prompt", "options"],
+              "properties": {
+                "question_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+                "type": { "enum": ["open_ended", "multiple_choice", "scenario"] },
+                "prompt": { "type": "string", "minLength": 1, "maxLength": 1200 },
+                "options": {
+                  "type": "array",
+                  "maxItems": 5,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["id", "label"],
+                    "properties": {
+                      "id": { "type": "string", "minLength": 1, "maxLength": 20 },
+                      "label": { "type": "string", "minLength": 1, "maxLength": 500 }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "private_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "server_only",
+        "expected_concepts",
+        "unacceptable_claims",
+        "correct_option_id",
+        "scoring_notes"
+      ],
+      "properties": {
+        "server_only": { "const": true },
+        "expected_concepts": {
+          "type": "array",
+          "maxItems": 12,
+          "items": { "type": "string", "maxLength": 400 }
+        },
+        "unacceptable_claims": {
+          "type": "array",
+          "maxItems": 12,
+          "items": { "type": "string", "maxLength": 400 }
+        },
+        "correct_option_id": { "type": ["string", "null"], "maxLength": 20 },
+        "scoring_notes": { "type": "string", "maxLength": 700 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "stage_status": { "const": "mastered" } } },
+      "then": {
+        "properties": {
+          "next_action": { "const": "advance" },
+          "priority_gaps": { "maxItems": 0 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "next_action": { "const": "retry" } } },
+      "then": {
+        "properties": {
+          "user_view": {
+            "properties": { "question": { "type": "object" } }
+          }
+        }
+      }
+    }
+  ]
+}

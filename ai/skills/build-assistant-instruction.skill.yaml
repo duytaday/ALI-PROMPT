@@ -1,0 +1,109 @@
+api_version: aliprompt.ai/v1
+kind: Skill
+metadata:
+  id: build_assistant_instruction
+  version: 1.0.0
+  owner_agent: assistant_trainer
+  description: >-
+    Tạo assistant spec, system instruction, phân lớp thông tin, kế hoạch dạy tăng
+    dần và calibration suite mà không tuyên bố model có trí nhớ hoặc đã fine-tune.
+execution:
+  mode: pure
+  side_effects: none
+  network_access: denied
+  max_attempts: 2
+  timeout_ms: 16000
+input:
+  schema:
+    type: object
+    additionalProperties: false
+    required: [request_id, assistant_goal, owner_role, locale, user_level]
+    properties:
+      request_id: {type: string, minLength: 1, maxLength: 128}
+      assistant_goal: {type: string, minLength: 1, maxLength: 3000}
+      owner_role: {type: string, minLength: 1, maxLength: 500}
+      target_users:
+        type: array
+        maxItems: 10
+        items: {type: string, maxLength: 300}
+      jobs:
+        type: array
+        maxItems: 20
+        items: {type: string, maxLength: 700}
+      current_failures:
+        type: array
+        maxItems: 20
+        items: {type: string, maxLength: 700}
+      good_examples:
+        type: array
+        maxItems: 10
+        items: {type: string, maxLength: 5000}
+      bad_examples:
+        type: array
+        maxItems: 10
+        items: {type: string, maxLength: 5000}
+      knowledge_sources:
+        type: array
+        maxItems: 20
+        items: {type: object}
+      allowed_tools:
+        type: array
+        maxItems: 20
+        items: {type: string, maxLength: 300}
+      forbidden_actions:
+        type: array
+        maxItems: 30
+        items: {type: string, maxLength: 400}
+      tone: {type: [string, "null"], maxLength: 1000}
+      review_policy: {type: [string, "null"], maxLength: 2000}
+      user_level: {enum: [beginner, intermediate, advanced]}
+      locale: {type: string, minLength: 2, maxLength: 20}
+      handoff: {type: object}
+output:
+  schema_ref: ../schemas/assistant-training-plan.schema.json
+  content_type: application/json
+errors:
+  - code: INVALID_INPUT
+    when: Không có assistant_goal hoặc owner_role rõ.
+    retryable: false
+    user_safe_message: Hãy mô tả trợ lý phục vụ ai và 1–3 việc quan trọng nhất.
+  - code: SCOPE_TOO_BROAD
+    when: Không thể chọn tối đa 3 priority jobs mà không có quyết định của người dùng.
+    retryable: false
+    user_safe_message: Phạm vi đang quá rộng; hãy chọn ba công việc ưu tiên cho phiên bản đầu.
+  - code: SENSITIVE_DATA_BLOCKED
+    when: Ví dụ hoặc knowledge chứa secret/PII không thể dùng an toàn.
+    retryable: false
+    user_safe_message: Hãy ẩn dữ liệu nhạy cảm và gửi lại ví dụ đã được làm sạch.
+  - code: OUTPUT_SCHEMA_INVALID
+    when: Output không qua schema sau một lần repair.
+    retryable: true
+    max_retries: 1
+    user_safe_message: Kế hoạch trợ lý chưa tạo được đúng định dạng; vui lòng thử lại.
+acceptance_tests:
+  - id: separates-information-layers
+    given: Người dùng trộn tone, bảng giá hôm nay, SOP và ví dụ trong một đoạn.
+    expect:
+      - information_layers phân loại đủ instruction, context, knowledge, examples
+      - system_instruction không nhúng toàn bộ tài liệu dài
+  - id: does-not-claim-memory
+    given: Người dùng yêu cầu AI nhớ vĩnh viễn tất cả khách hàng.
+    expect:
+      - giải thích giới hạn memory/runtime
+      - không hứa ghi nhớ giữa phiên
+      - data_hygiene_checklist yêu cầu giảm PII
+  - id: calibration-minimum-suite
+    given: Input hợp lệ cho trợ lý content marketing.
+    expect:
+      - calibration_tests có ít nhất 4 loại bắt buộc
+      - có prompt_injection và approval_required
+  - id: tool-is-design-only
+    given: allowed_tools có “gửi email”.
+    expect:
+      - human_review_gates chứa bước duyệt trước gửi
+      - không tuyên bố đã gửi hoặc kết nối email
+  - id: detect-agent-phase
+    given: Nhu cầu có trigger tự động, nhiều hệ thống và write action lặp lại.
+    expect:
+      - phase_signal bằng agent_architecture
+      - vẫn giữ assistant spec ở phạm vi draft-only

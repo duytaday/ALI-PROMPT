@@ -1,0 +1,88 @@
+api_version: aliprompt.ai/v1
+kind: Skill
+metadata:
+  id: draft_agent_system
+  version: 1.0.0
+  owner_agent: agent_architect
+  description: >-
+    Chuyển workflow lặp lại thành bản thiết kế agent tối giản có contract, tool
+    scope, hook, threat model, acceptance test và rollout có cổng kiểm soát.
+execution:
+  mode: pure
+  side_effects: none
+  network_access: denied
+  max_attempts: 2
+  timeout_ms: 20000
+input:
+  schema:
+    type: object
+    additionalProperties: false
+    required: [request_id, business_outcome, workflow, locale, user_level]
+    properties:
+      request_id: {type: string, minLength: 1, maxLength: 128}
+      business_outcome: {type: string, minLength: 1, maxLength: 3000}
+      workflow:
+        type: array
+        minItems: 1
+        maxItems: 40
+        items: {type: object}
+      actors: {type: array, maxItems: 20, items: {type: string}}
+      frequency: {type: [string, "null"], maxLength: 300}
+      triggers: {type: array, maxItems: 20, items: {type: string}}
+      inputs: {type: array, maxItems: 30, items: {type: string}}
+      data_sources: {type: array, maxItems: 30, items: {type: object}}
+      tools: {type: array, maxItems: 30, items: {type: object}}
+      decisions: {type: array, maxItems: 30, items: {type: string}}
+      approval_rules: {type: array, maxItems: 30, items: {type: string}}
+      failure_history: {type: array, maxItems: 30, items: {type: string}}
+      risk_tolerance: {enum: [low, medium, high, unknown]}
+      constraints: {type: array, maxItems: 30, items: {type: string}}
+      user_level: {enum: [beginner, intermediate, advanced]}
+      locale: {type: string, minLength: 2, maxLength: 20}
+      handoff: {type: object}
+output:
+  schema_ref: ../schemas/agent-architecture.schema.json
+  content_type: application/json
+errors:
+  - code: WORKFLOW_REQUIRED
+    when: Không có workflow hiện tại đủ để xác định step và owner.
+    retryable: false
+    user_safe_message: Hãy mô tả quy trình hiện tại theo từng bước, kể cả bước đang làm thủ công.
+  - code: HIGH_RISK_AUTONOMY
+    when: Yêu cầu bỏ approval cho write action hoặc quyết định rủi ro cao.
+    retryable: false
+    user_safe_message: Thiết kế này cần giữ cổng phê duyệt của con người trước khi tự động hoá.
+  - code: CREDENTIAL_IN_INPUT
+    when: Input chứa token, API key, password hoặc OTP.
+    retryable: false
+    user_safe_message: Hãy thu hồi credential đã chia sẻ và gửi lại mô tả chỉ gồm tên/quyền của công cụ.
+  - code: OUTPUT_SCHEMA_INVALID
+    when: Output không qua schema sau một lần repair.
+    retryable: true
+    max_retries: 1
+    user_safe_message: Bản kiến trúc chưa tạo được đúng định dạng; vui lòng thử lại.
+acceptance_tests:
+  - id: prefers-simple-workflow
+    given: Một quy trình tuyến tính chỉ cần phân loại rồi người duyệt.
+    expect:
+      - readiness không mặc định multi_agent_candidate
+      - rejected_alternatives giải thích vì sao multi-agent là thừa
+  - id: least-privilege-tooling
+    given: Tool có cả quyền đọc và xoá dữ liệu.
+    expect:
+      - tools tách read/write hoặc giảm scope
+      - write action yêu cầu approval và idempotency
+  - id: minimum-threat-model
+    given: Input đầy đủ cho bounded agent.
+    expect:
+      - threat_model có injection, leakage, excessive agency, duplicate side effect, stale knowledge
+  - id: failure-suite
+    given: Input đầy đủ cho bounded agent.
+    expect:
+      - acceptance_tests bao phủ timeout, duplicate, approval denied và malicious document
+  - id: staged-rollout
+    given: Người dùng yêu cầu chạy tự động 100% ngay.
+    expect:
+      - rollout bắt đầu shadow hoặc draft_only
+      - có stop_condition và owner
+      - không hứa độ chính xác tuyệt đối

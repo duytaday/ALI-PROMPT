@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/schemas/assistant-training-plan.schema.json",
+  "title": "AliPrompt Assistant Training Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "agent_id",
+    "status",
+    "clarifying_questions",
+    "assumptions",
+    "diagnosis",
+    "assistant_spec",
+    "information_layers",
+    "system_instruction",
+    "teaching_steps",
+    "calibration_tests",
+    "data_hygiene_checklist",
+    "phase_signal",
+    "teach_back_question",
+    "refusal_reason"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "agent_id": { "const": "assistant_trainer" },
+    "status": { "enum": ["ready", "needs_context", "refused"] },
+    "clarifying_questions": {
+      "type": "array",
+      "maxItems": 3,
+      "items": { "type": "string", "maxLength": 350 }
+    },
+    "assumptions": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "type": "string", "maxLength": 400 }
+    },
+    "diagnosis": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["failure", "root_cause", "fix"],
+        "properties": {
+          "failure": { "type": "string", "maxLength": 500 },
+          "root_cause": {
+            "enum": [
+              "missing_context",
+              "conflicting_instruction",
+              "stale_knowledge",
+              "weak_examples",
+              "missing_acceptance_criteria",
+              "missing_tool_or_permission",
+              "unknown"
+            ]
+          },
+          "fix": { "type": "string", "maxLength": 500 }
+        }
+      }
+    },
+    "assistant_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "purpose",
+        "target_users",
+        "priority_jobs",
+        "out_of_scope",
+        "sources_of_truth",
+        "priority_rules",
+        "human_review_gates"
+      ],
+      "properties": {
+        "name": { "type": "string", "maxLength": 120 },
+        "purpose": { "type": "string", "maxLength": 700 },
+        "target_users": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "type": "string", "maxLength": 250 }
+        },
+        "priority_jobs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": { "type": "string", "maxLength": 500 }
+        },
+        "out_of_scope": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 15,
+          "items": { "type": "string", "maxLength": 400 }
+        },
+        "sources_of_truth": {
+          "type": "array",
+          "maxItems": 15,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "owner", "version_or_date", "usage_rule"],
+            "properties": {
+              "name": { "type": "string", "maxLength": 250 },
+              "owner": { "type": ["string", "null"], "maxLength": 200 },
+              "version_or_date": { "type": ["string", "null"], "maxLength": 100 },
+              "usage_rule": { "type": "string", "maxLength": 400 }
+            }
+          }
+        },
+        "priority_rules": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": { "type": "string", "maxLength": 400 }
+        },
+        "human_review_gates": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": { "type": "string", "maxLength": 400 }
+        }
+      }
+    },
+    "information_layers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instruction", "context", "knowledge", "examples", "tools", "evaluation"],
+      "properties": {
+        "instruction": { "$ref": "#/$defs/stringList" },
+        "context": { "$ref": "#/$defs/stringList" },
+        "knowledge": { "$ref": "#/$defs/stringList" },
+        "examples": { "$ref": "#/$defs/stringList" },
+        "tools": { "$ref": "#/$defs/stringList" },
+        "evaluation": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "system_instruction": { "type": "string", "maxLength": 20000 },
+    "teaching_steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "change", "why", "exercise", "pass_condition"],
+        "properties": {
+          "step": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "change": { "type": "string", "maxLength": 500 },
+          "why": { "type": "string", "maxLength": 500 },
+          "exercise": { "type": "string", "maxLength": 800 },
+          "pass_condition": { "type": "string", "maxLength": 500 }
+        }
+      }
+    },
+    "calibration_tests": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "input", "expected_behavior", "failure_signals"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "kind": {
+            "enum": [
+              "happy_path",
+              "missing_data",
+              "prompt_injection",
+              "approval_required",
+              "stale_knowledge",
+              "out_of_scope"
+            ]
+          },
+          "input": { "type": "string", "maxLength": 3000 },
+          "expected_behavior": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "maxLength": 450 }
+          },
+          "failure_signals": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "maxLength": 450 }
+          }
+        }
+      }
+    },
+    "data_hygiene_checklist": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 15,
+      "items": { "type": "string", "maxLength": 450 }
+    },
+    "phase_signal": { "enum": ["none", "agent_architecture"] },
+    "teach_back_question": { "type": "string", "maxLength": 600 },
+    "refusal_reason": { "type": ["string", "null"], "maxLength": 600 }
+  },
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 500 }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "needs_context" } } },
+      "then": { "properties": { "clarifying_questions": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "refused" } } },
+      "then": { "properties": { "refusal_reason": { "type": "string", "minLength": 1 } } }
+    }
+  ]
+}

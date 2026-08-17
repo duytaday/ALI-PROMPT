@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/schemas/hook-event.schema.json",
+  "title": "AliPrompt Hook Event Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_version",
+    "event_id",
+    "event_name",
+    "request_id",
+    "occurred_at",
+    "actor",
+    "payload",
+    "metadata"
+  ],
+  "properties": {
+    "event_version": { "const": "1.0.0" },
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "event_name": {
+      "enum": [
+        "request.received",
+        "request.safety_reviewed",
+        "route.selected",
+        "agent.before_call",
+        "agent.output_received",
+        "agent.output_validated",
+        "response.before_render",
+        "response.rendered",
+        "learning.answer_submitted",
+        "learning.stage_evaluated",
+        "phase.signal_emitted",
+        "offer.before_render",
+        "runtime.failed"
+      ]
+    },
+    "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["anonymous_user", "authenticated_user", "agent", "system"] },
+        "id": { "type": ["string", "null"], "maxLength": 256 }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "Payload theo event; phải là bản tối thiểu đã qua safety review."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["session_id", "agent_id", "prompt_version", "schema_version"],
+      "properties": {
+        "session_id": { "type": ["string", "null"], "maxLength": 128 },
+        "agent_id": { "type": ["string", "null"], "maxLength": 128 },
+        "prompt_version": { "type": ["string", "null"], "maxLength": 64 },
+        "schema_version": { "type": ["string", "null"], "maxLength": 64 }
+      }
+    }
+  }
+}

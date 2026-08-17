@@ -1,0 +1,42 @@
+api_version: aliprompt.ai/v1
+kind: SkillCatalog
+metadata:
+  name: aliprompt-core-skills
+  version: 1.0.0
+defaults:
+  side_effects: none
+  network_access: denied
+  credential_access: denied
+  output_validation: required
+skills:
+  - id: classify_learning_need
+    spec: ./classify-learning-need.skill.yaml
+    allowed_agents: [orchestrator]
+  - id: transform_prompt
+    spec: ./transform-prompt.skill.yaml
+    allowed_agents: [prompt_coach]
+  - id: build_assistant_instruction
+    spec: ./build-assistant-instruction.skill.yaml
+    allowed_agents: [assistant_trainer]
+  - id: assess_mastery
+    spec: ./assess-mastery.skill.yaml
+    allowed_agents: [learning_evaluator]
+  - id: draft_agent_system
+    spec: ./draft-agent-system.skill.yaml
+    allowed_agents: [agent_architect]
+  - id: safety_review
+    spec: ./safety-review.skill.yaml
+    allowed_agents:
+      - orchestrator
+      - prompt_coach
+      - assistant_trainer
+      - learning_evaluator
+      - agent_architect
+denied_capabilities:
+  - charge_or_refund_payment
+  - send_external_message
+  - publish_content
+  - mutate_customer_data
+  - create_or_reveal_credentials
+  - bypass_human_approval
+  - make_binding_commercial_commitment
