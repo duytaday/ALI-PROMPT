@@ -3,6 +3,10 @@
 `cases.yaml` là bộ smoke/regression eval độc lập với nhà cung cấp model. Harness
 triển khai sau này cần:
 
+`npm run ai:validate` hiện đã kiểm 18/18 input đúng skill contract, strict-compile
+schema và chạy các invariant guard. Việc này không gọi model và không thay thế harness
+behavioral bên dưới.
+
 1. Pin model, temperature, system-prompt version và schema version.
 2. Với mỗi case, gửi đúng `input` cho agent được chỉ định.
 3. Chấm `schema_valid` bằng JSON Schema trước; schema fail là case fail ngay.

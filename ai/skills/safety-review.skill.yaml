@@ -2,7 +2,7 @@ api_version: aliprompt.ai/v1
 kind: Skill
 metadata:
   id: safety_review
-  version: 1.0.0
+  version: 1.1.0
   owner_agent: system
   description: >-
     Phát hiện và làm sạch secret, PII không cần thiết, prompt injection và yêu cầu
@@ -15,18 +15,7 @@ execution:
   max_attempts: 1
   timeout_ms: 3000
 input:
-  schema:
-    type: object
-    additionalProperties: false
-    required: [request_id, content, content_origin, intended_use]
-    properties:
-      request_id: {type: string, minLength: 1, maxLength: 128}
-      content: {type: string, maxLength: 30000}
-      content_origin: {enum: [user, upload, tool, model, catalog]}
-      intended_use: {enum: [model_input, handoff, log, user_response]}
-      consent_scopes:
-        type: array
-        items: {enum: [session_processing, save_progress, product_analytics]}
+  schema_ref: ../schemas/safety-review-request.schema.json
 output:
   schema_ref: ../schemas/safety-review.schema.json
   content_type: application/json
@@ -69,3 +58,15 @@ acceptance_tests:
     expect:
       - action bằng redact hoặc block
       - sanitized_content chỉ giữ dữ liệu tối thiểu
+  - id: outbound-private-state-blocked
+    given: Outbound model content chứa private evaluator state hoặc hành động chưa duyệt.
+    expect:
+      - direction bằng outbound
+      - action bằng block hoặc human_review
+      - continuation không bằng continue
+      - allowed_destinations rỗng
+  - id: provenance-is-preserved
+    given: Content đã qua một lần redaction và được review lại cho user_response.
+    expect:
+      - provenance giữ content_id và source_event_id
+      - transformations ghi nhận redaction hoặc safety review không đổi

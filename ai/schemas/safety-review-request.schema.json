@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/schemas/safety-review-request.schema.json",
+  "title": "AliPrompt Safety Review Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "agent_id",
+    "content",
+    "direction",
+    "intended_use",
+    "provenance",
+    "consent_scopes",
+    "requested_actions"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "agent_id": { "const": "safety_reviewer" },
+    "content": { "type": "string", "minLength": 1, "maxLength": 30000 },
+    "direction": { "enum": ["ingress", "outbound"] },
+    "intended_use": { "enum": ["model_input", "handoff", "log", "user_response"] },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content_id",
+        "source_event_id",
+        "content_origin",
+        "trust_level",
+        "source_actor_type",
+        "source_agent_id",
+        "content_sha256"
+      ],
+      "properties": {
+        "content_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "source_event_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "content_origin": { "enum": ["user", "upload", "tool", "model", "catalog", "system"] },
+        "trust_level": { "enum": ["untrusted", "server_verified"] },
+        "source_actor_type": {
+          "enum": ["anonymous_user", "authenticated_user", "agent", "system", "external_tool"]
+        },
+        "source_agent_id": { "type": ["string", "null"], "maxLength": 128 },
+        "content_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "consent_scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["session_processing", "save_progress", "product_analytics"] }
+    },
+    "requested_actions": {
+      "type": "array",
+      "maxItems": 20,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "render_content",
+          "call_model",
+          "create_handoff",
+          "write_log",
+          "send_external_message",
+          "publish_content",
+          "charge_or_refund_payment",
+          "delete_or_mutate_important_data",
+          "change_permissions",
+          "make_high_stakes_decision"
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["direction"],
+        "properties": { "direction": { "const": "ingress" } }
+      },
+      "then": {
+        "properties": {
+          "intended_use": { "enum": ["model_input", "handoff", "log"] }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["direction"],
+        "properties": { "direction": { "const": "outbound" } }
+      },
+      "then": {
+        "properties": { "intended_use": { "const": "user_response" } }
+      }
+    }
+  ]
+}

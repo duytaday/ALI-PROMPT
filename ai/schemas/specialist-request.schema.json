@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/schemas/specialist-request.schema.json",
+  "title": "AliPrompt Adapted Specialist Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "route",
+    "target_agent",
+    "adapter_id",
+    "input_schema_ref",
+    "adapted_input",
+    "source_event_id"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "route": {
+      "enum": ["prompt_coach", "assistant_trainer", "learning_evaluator", "agent_architect"]
+    },
+    "target_agent": {
+      "enum": ["prompt_coach", "assistant_trainer", "learning_evaluator", "agent_architect"]
+    },
+    "adapter_id": {
+      "enum": [
+        "orchestrator_to_prompt_coach_v1",
+        "orchestrator_to_assistant_trainer_v1",
+        "checkpoint_to_learning_evaluator_v1",
+        "orchestrator_to_agent_architect_v1"
+      ]
+    },
+    "input_schema_ref": {
+      "enum": [
+        "../skills/transform-prompt.skill.yaml#/input/schema",
+        "../skills/build-assistant-instruction.skill.yaml#/input/schema",
+        "../schemas/learning-evaluator-request.schema.json",
+        "../skills/draft-agent-system.skill.yaml#/input/schema"
+      ]
+    },
+    "adapted_input": { "type": "object" },
+    "source_event_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["route"],
+        "properties": { "route": { "const": "prompt_coach" } }
+      },
+      "then": {
+        "properties": {
+          "target_agent": { "const": "prompt_coach" },
+          "adapter_id": { "const": "orchestrator_to_prompt_coach_v1" },
+          "input_schema_ref": { "const": "../skills/transform-prompt.skill.yaml#/input/schema" },
+          "adapted_input": { "$ref": "#/$defs/promptCoachInput" }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["route"],
+        "properties": { "route": { "const": "assistant_trainer" } }
+      },
+      "then": {
+        "properties": {
+          "target_agent": { "const": "assistant_trainer" },
+          "adapter_id": { "const": "orchestrator_to_assistant_trainer_v1" },
+          "input_schema_ref": {
+            "const": "../skills/build-assistant-instruction.skill.yaml#/input/schema"
+          },
+          "adapted_input": { "$ref": "#/$defs/assistantTrainerInput" }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["route"],
+        "properties": { "route": { "const": "learning_evaluator" } }
+      },
+      "then": {
+        "properties": {
+          "target_agent": { "const": "learning_evaluator" },
+          "adapter_id": { "const": "checkpoint_to_learning_evaluator_v1" },
+          "input_schema_ref": { "const": "../schemas/learning-evaluator-request.schema.json" },
+          "adapted_input": { "$ref": "learning-evaluator-request.schema.json" }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["route"],
+        "properties": { "route": { "const": "agent_architect" } }
+      },
+      "then": {
+        "properties": {
+          "target_agent": { "const": "agent_architect" },
+          "adapter_id": { "const": "orchestrator_to_agent_architect_v1" },
+          "input_schema_ref": { "const": "../skills/draft-agent-system.skill.yaml#/input/schema" },
+          "adapted_input": { "$ref": "#/$defs/agentArchitectInput" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "handoffContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_agent",
+        "target_agent",
+        "adapter_id",
+        "user_request",
+        "objective",
+        "known_facts",
+        "missing_information",
+        "constraints",
+        "consent_scopes",
+        "provenance_event_id"
+      ],
+      "properties": {
+        "source_agent": { "const": "orchestrator" },
+        "target_agent": {
+          "enum": ["prompt_coach", "assistant_trainer", "agent_architect"]
+        },
+        "adapter_id": {
+          "enum": [
+            "orchestrator_to_prompt_coach_v1",
+            "orchestrator_to_assistant_trainer_v1",
+            "orchestrator_to_agent_architect_v1"
+          ]
+        },
+        "user_request": { "type": "string", "minLength": 1, "maxLength": 5000 },
+        "objective": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "known_facts": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+        },
+        "missing_information": {
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+        },
+        "constraints": {
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+        },
+        "consent_scopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["session_processing", "save_progress", "product_analytics"]
+          }
+        },
+        "provenance_event_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "promptCoachInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request_id", "agent_id", "task", "locale", "user_level", "handoff"],
+      "properties": {
+        "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "agent_id": { "const": "prompt_coach" },
+        "task": { "type": "string", "minLength": 1, "maxLength": 3000 },
+        "original_prompt": { "type": ["string", "null"], "maxLength": 12000 },
+        "context": { "type": ["string", "null"], "maxLength": 6000 },
+        "available_inputs": {
+          "type": "array",
+          "maxItems": 30,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+        },
+        "constraints": {
+          "type": "array",
+          "maxItems": 30,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+        },
+        "desired_output": { "type": ["string", "null"], "maxLength": 3000 },
+        "user_level": { "enum": ["beginner", "intermediate", "advanced"] },
+        "locale": { "type": "string", "minLength": 2, "maxLength": 20 },
+        "handoff": { "$ref": "#/$defs/handoffContext" }
+      },
+      "allOf": [
+        {
+          "properties": {
+            "handoff": {
+              "type": "object",
+              "properties": {
+                "target_agent": { "const": "prompt_coach" },
+                "adapter_id": { "const": "orchestrator_to_prompt_coach_v1" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "assistantTrainerInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "agent_id",
+        "assistant_goal",
+        "owner_role",
+        "locale",
+        "user_level",
+        "handoff"
+      ],
+      "properties": {
+        "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "agent_id": { "const": "assistant_trainer" },
+        "assistant_goal": { "type": "string", "minLength": 1, "maxLength": 3000 },
+        "owner_role": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "target_users": {
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+        },
+        "jobs": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 700 }
+        },
+        "current_failures": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 700 }
+        },
+        "good_examples": {
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 5000 }
+        },
+        "bad_examples": {
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 5000 }
+        },
+        "knowledge_sources": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "type": "object" }
+        },
+        "allowed_tools": {
+          "type": "array",
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 300 }
+        },
+        "forbidden_actions": {
+          "type": "array",
+          "maxItems": 30,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 400 }
+        },
+        "tone": { "type": ["string", "null"], "maxLength": 1000 },
+        "review_policy": { "type": ["string", "null"], "maxLength": 2000 },
+        "user_level": { "enum": ["beginner", "intermediate", "advanced"] },
+        "locale": { "type": "string", "minLength": 2, "maxLength": 20 },
+        "handoff": { "$ref": "#/$defs/handoffContext" }
+      },
+      "allOf": [
+        {
+          "properties": {
+            "handoff": {
+              "type": "object",
+              "properties": {
+                "target_agent": { "const": "assistant_trainer" },
+                "adapter_id": { "const": "orchestrator_to_assistant_trainer_v1" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "agentArchitectInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request_id",
+        "agent_id",
+        "business_outcome",
+        "workflow",
+        "risk_tolerance",
+        "locale",
+        "user_level",
+        "handoff"
+      ],
+      "properties": {
+        "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "agent_id": { "const": "agent_architect" },
+        "business_outcome": { "type": "string", "minLength": 1, "maxLength": 3000 },
+        "workflow": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 40,
+          "items": { "type": "object" }
+        },
+        "actors": { "type": "array", "maxItems": 20, "items": { "type": "string" } },
+        "frequency": { "type": ["string", "null"], "maxLength": 300 },
+        "triggers": { "type": "array", "maxItems": 20, "items": { "type": "string" } },
+        "inputs": { "type": "array", "maxItems": 30, "items": { "type": "string" } },
+        "data_sources": { "type": "array", "maxItems": 30, "items": { "type": "object" } },
+        "tools": { "type": "array", "maxItems": 30, "items": { "type": "object" } },
+        "decisions": { "type": "array", "maxItems": 30, "items": { "type": "string" } },
+        "approval_rules": { "type": "array", "maxItems": 30, "items": { "type": "string" } },
+        "failure_history": { "type": "array", "maxItems": 30, "items": { "type": "string" } },
+        "risk_tolerance": { "enum": ["low", "medium", "high", "unknown"] },
+        "constraints": { "type": "array", "maxItems": 30, "items": { "type": "string" } },
+        "user_level": { "enum": ["beginner", "intermediate", "advanced"] },
+        "locale": { "type": "string", "minLength": 2, "maxLength": 20 },
+        "handoff": { "$ref": "#/$defs/handoffContext" }
+      },
+      "allOf": [
+        {
+          "properties": {
+            "handoff": {
+              "type": "object",
+              "properties": {
+                "target_agent": { "const": "agent_architect" },
+                "adapter_id": { "const": "orchestrator_to_agent_architect_v1" }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

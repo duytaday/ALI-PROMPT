@@ -19,11 +19,11 @@
     "calibration_tests",
     "data_hygiene_checklist",
     "phase_signal",
-    "teach_back_question",
+    "learning_checkpoint",
     "refusal_reason"
   ],
   "properties": {
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "const": "1.1.0" },
     "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
     "agent_id": { "const": "assistant_trainer" },
     "status": { "enum": ["ready", "needs_context", "refused"] },
@@ -195,7 +195,12 @@
       "items": { "type": "string", "maxLength": 450 }
     },
     "phase_signal": { "enum": ["none", "agent_architecture"] },
-    "teach_back_question": { "type": "string", "maxLength": 600 },
+    "learning_checkpoint": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "learning-checkpoint.schema.json" }
+      ]
+    },
     "refusal_reason": { "type": ["string", "null"], "maxLength": 600 }
   },
   "$defs": {
@@ -207,12 +212,49 @@
   },
   "allOf": [
     {
-      "if": { "properties": { "status": { "const": "needs_context" } } },
-      "then": { "properties": { "clarifying_questions": { "minItems": 1 } } }
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "ready" } }
+      },
+      "then": {
+        "properties": {
+          "clarifying_questions": { "type": "array", "maxItems": 0 },
+          "learning_checkpoint": {
+            "allOf": [
+              { "$ref": "learning-checkpoint.schema.json" },
+              { "type": "object", "properties": { "source_agent": { "const": "assistant_trainer" } } }
+            ]
+          },
+          "refusal_reason": { "type": "null" }
+        }
+      }
     },
     {
-      "if": { "properties": { "status": { "const": "refused" } } },
-      "then": { "properties": { "refusal_reason": { "type": "string", "minLength": 1 } } }
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "needs_context" } }
+      },
+      "then": {
+        "properties": {
+          "clarifying_questions": { "type": "array", "minItems": 1 },
+          "learning_checkpoint": { "type": "null" },
+          "refusal_reason": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "refused" } }
+      },
+      "then": {
+        "properties": {
+          "clarifying_questions": { "type": "array", "maxItems": 0 },
+          "phase_signal": { "const": "none" },
+          "learning_checkpoint": { "type": "null" },
+          "refusal_reason": { "type": "string", "minLength": 1 }
+        }
+      }
     }
   ]
 }

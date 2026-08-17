@@ -7,6 +7,7 @@
   "required": [
     "schema_version",
     "request_id",
+    "agent_id",
     "primary_route",
     "confidence",
     "routing_reason",
@@ -20,8 +21,9 @@
     "user_message"
   ],
   "properties": {
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "const": "1.1.0" },
     "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "agent_id": { "const": "orchestrator" },
     "primary_route": {
       "enum": [
         "prompt_coach",
@@ -57,6 +59,7 @@
       "additionalProperties": false,
       "required": [
         "target_agent",
+        "adapter_id",
         "user_request",
         "objective",
         "known_facts",
@@ -75,22 +78,35 @@
             null
           ]
         },
-        "user_request": { "type": "string", "maxLength": 5000 },
-        "objective": { "type": "string", "maxLength": 500 },
+        "adapter_id": {
+          "type": ["string", "null"],
+          "enum": [
+            "orchestrator_to_prompt_coach_v1",
+            "orchestrator_to_assistant_trainer_v1",
+            "checkpoint_to_learning_evaluator_v1",
+            "orchestrator_to_agent_architect_v1",
+            null
+          ]
+        },
+        "user_request": { "type": "string", "minLength": 1, "maxLength": 5000 },
+        "objective": { "type": "string", "minLength": 1, "maxLength": 500 },
         "known_facts": {
           "type": "array",
           "maxItems": 20,
-          "items": { "type": "string", "maxLength": 500 }
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
         },
         "missing_information": {
           "type": "array",
           "maxItems": 10,
-          "items": { "type": "string", "maxLength": 300 }
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 300 }
         },
         "constraints": {
           "type": "array",
           "maxItems": 10,
-          "items": { "type": "string", "maxLength": 300 }
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 300 }
         },
         "consent_scopes": {
           "type": "array",
@@ -123,20 +139,103 @@
   },
   "allOf": [
     {
-      "if": { "properties": { "needs_clarification": { "const": true } } },
-      "then": { "properties": { "clarifying_questions": { "minItems": 1 } } }
+      "if": {
+        "required": ["needs_clarification"],
+        "properties": { "needs_clarification": { "const": true } }
+      },
+      "then": { "properties": { "clarifying_questions": { "type": "array", "minItems": 1 } } }
     },
     {
-      "if": { "properties": { "needs_clarification": { "const": false } } },
-      "then": { "properties": { "clarifying_questions": { "maxItems": 0 } } }
+      "if": {
+        "required": ["needs_clarification"],
+        "properties": { "needs_clarification": { "const": false } }
+      },
+      "then": { "properties": { "clarifying_questions": { "type": "array", "maxItems": 0 } } }
     },
     {
-      "if": { "properties": { "primary_route": { "const": "unsupported" } } },
+      "if": {
+        "required": ["primary_route"],
+        "properties": { "primary_route": { "const": "prompt_coach" } }
+      },
       "then": {
         "properties": {
           "handoff": {
-            "properties": { "target_agent": { "type": "null" } }
+            "type": "object",
+            "properties": {
+              "target_agent": { "const": "prompt_coach" },
+              "adapter_id": { "const": "orchestrator_to_prompt_coach_v1" }
+            }
           }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["primary_route"],
+        "properties": { "primary_route": { "const": "assistant_trainer" } }
+      },
+      "then": {
+        "properties": {
+          "handoff": {
+            "type": "object",
+            "properties": {
+              "target_agent": { "const": "assistant_trainer" },
+              "adapter_id": { "const": "orchestrator_to_assistant_trainer_v1" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["primary_route"],
+        "properties": { "primary_route": { "const": "learning_evaluator" } }
+      },
+      "then": {
+        "properties": {
+          "handoff": {
+            "type": "object",
+            "properties": {
+              "target_agent": { "const": "learning_evaluator" },
+              "adapter_id": { "const": "checkpoint_to_learning_evaluator_v1" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["primary_route"],
+        "properties": { "primary_route": { "const": "agent_architect" } }
+      },
+      "then": {
+        "properties": {
+          "handoff": {
+            "type": "object",
+            "properties": {
+              "target_agent": { "const": "agent_architect" },
+              "adapter_id": { "const": "orchestrator_to_agent_architect_v1" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["primary_route"],
+        "properties": { "primary_route": { "const": "unsupported" } }
+      },
+      "then": {
+        "properties": {
+          "handoff": {
+            "type": "object",
+            "properties": {
+              "target_agent": { "type": "null" },
+              "adapter_id": { "type": "null" }
+            }
+          },
+          "phase_recommendation": { "type": "null" },
+          "catalog_offer_id": { "type": "null" }
         }
       }
     }

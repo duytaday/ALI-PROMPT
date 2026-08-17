@@ -53,10 +53,38 @@ test("keeps product metadata, D1 binding, and API contract in source", async () 
   assert.match(page, /x-forwarded-host/);
   assert.match(layout, /lang="vi"/);
   assert.match(component, /fetch\("\/api\/leads"/);
+  assert.match(component, /website: String\(form\.get\("website"\)/);
   assert.match(component, /Không nhập dữ liệu khách hàng/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.deepEqual(JSON.parse(hosting).d1, "DB");
   assert.match(route, /ALLOWED_STAGES/);
   assert.match(route, /payload\.consent !== true/);
+  assert.match(route, /hasHoneypotValue\(payload\.website\)/);
+  assert.ok(
+    route.indexOf("hasHoneypotValue(payload.website)") < route.indexOf("await ensureLeadStorage()"),
+    "the server honeypot must short-circuit before database access",
+  );
+  assert.match(route, /onConflictDoUpdate/);
+  assert.match(route, /submissionCount:\s*sql/);
 });
 
+test("keeps admin authorization and spreadsheet-injection defenses server-side", async () => {
+  const [adminAuth, adminPage, csvRoute] = await Promise.all([
+    readFile(new URL("../lib/admin-auth.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/leads.csv/route.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(adminAuth, /ALIPROMPT_ADMIN_USER_ID/);
+  assert.match(adminAuth, /userId === adminUserId/);
+  assert.match(adminPage, /requireAdminUser\("\/admin"\)/);
+  assert.match(adminPage, /robots:\s*\{ index: false, follow: false \}/);
+  assert.match(csvRoute, /getAdminUser\(\)/);
+  assert.ok(
+    csvRoute.indexOf("await getAdminUser()") < csvRoute.indexOf("await ensureLeadStorage()"),
+    "authorization must happen before the database is touched",
+  );
+  assert.match(csvRoute, /status: 403/);
+  assert.match(csvRoute, /\^\[=\+\\-@\]/);
+  assert.match(csvRoute, /Cache-Control.*private, no-store/);
+});

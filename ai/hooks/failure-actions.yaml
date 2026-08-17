@@ -1,0 +1,21 @@
+api_version: aliprompt.ai/v1
+kind: FailureActionCatalog
+metadata:
+  id: core_failure_actions
+  version: 1.0.0
+defaults:
+  permit_model_call: false
+  permit_external_action: false
+actions:
+  deny_request: {continue_pipeline: false, render_safe_error: true}
+  deny_agent_call: {continue_pipeline: false, render_safe_error: true}
+  keep_stage_locked: {continue_pipeline: false, render_safe_error: true}
+  suppress_phase_recommendation: {continue_pipeline: true, render_safe_error: false}
+  suppress_offer: {continue_pipeline: true, render_safe_error: false}
+  return_safe_fallback: {continue_pipeline: false, render_safe_error: true}
+  repair_once_then_fallback: {continue_pipeline: false, render_safe_error: true}
+  remove_claim_and_continue: {continue_pipeline: true, render_safe_error: false}
+  deny_response: {continue_pipeline: false, render_safe_error: true}
+  deny_action_but_render_safe_content: {continue_pipeline: true, render_safe_error: false}
+  drop_telemetry_and_continue: {continue_pipeline: true, render_safe_error: false}
+  static_generic_error: {continue_pipeline: false, render_safe_error: true}

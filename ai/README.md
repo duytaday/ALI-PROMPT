@@ -1,8 +1,13 @@
 # AliPrompt AI assets
 
-Thư mục này là đặc tả độc lập với model và framework cho lớp AI của AliPrompt.vn.
-Nó chưa phải runtime thực thi. App chỉ nên gọi lớp AI qua các JSON contract trong
-`schemas/`; không parse câu chữ tự do từ model.
+Thư mục này là contract triển khai độc lập với model và framework cho lớp AI của
+AliPrompt.vn. Prompt, skill, event, handoff, safety và learning contract đã qua
+validator tĩnh; nó vẫn **chưa phải runtime thực thi** và chưa phải bằng chứng model đã
+pass behavioral eval. App chỉ nên gọi lớp AI qua JSON contract trong `schemas/`;
+không parse câu chữ tự do từ model.
+
+Chạy `npm run ai:validate` để parse toàn bộ JSON/YAML, strict-compile JSON Schema,
+kiểm invariant quan trọng và xác thực input của 18 eval case.
 
 ## Cấu trúc
 

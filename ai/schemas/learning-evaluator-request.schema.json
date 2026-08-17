@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/schemas/learning-evaluator-request.schema.json",
+  "title": "AliPrompt Learning Evaluator Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "agent_id",
+    "checkpoint",
+    "evidence",
+    "latest_user_answer",
+    "prior_attempts",
+    "question_mode",
+    "user_level",
+    "locale"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "agent_id": { "const": "learning_evaluator" },
+    "checkpoint": { "$ref": "learning-checkpoint.schema.json" },
+    "evidence": {
+      "type": "array",
+      "maxItems": 30,
+      "items": { "$ref": "#/$defs/evidenceItem" }
+    },
+    "latest_user_answer": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/evidenceItem" }
+      ]
+    },
+    "prior_attempts": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attempt_id", "question_id", "answer_summary", "criterion_statuses"],
+        "properties": {
+          "attempt_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "question_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "answer_summary": { "type": "string", "minLength": 1, "maxLength": 1200 },
+          "criterion_statuses": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["criterion_id", "status"],
+              "properties": {
+                "criterion_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+                "status": { "enum": ["mastered", "partial", "not_yet", "not_assessed"] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "question_mode": { "enum": ["auto", "open_ended", "multiple_choice", "scenario"] },
+    "user_level": { "enum": ["beginner", "intermediate", "advanced"] },
+    "locale": { "type": "string", "minLength": 2, "maxLength": 20 }
+  },
+  "$defs": {
+    "evidenceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "criterion_ids", "kind", "content", "origin"],
+      "properties": {
+        "evidence_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "criterion_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 128 }
+        },
+        "kind": {
+          "enum": [
+            "user_answer",
+            "prompt_revision",
+            "debug_result",
+            "design_decision",
+            "system_observation"
+          ]
+        },
+        "content": { "type": "string", "minLength": 1, "maxLength": 8000 },
+        "origin": { "enum": ["user", "runtime"] }
+      }
+    }
+  }
+}

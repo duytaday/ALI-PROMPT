@@ -2,8 +2,9 @@ api_version: aliprompt.ai/v1
 kind: HookPipeline
 metadata:
   id: runtime_safety
-  version: 1.0.0
+  version: 1.1.0
   event_schema: ../schemas/hook-event.schema.json
+  failure_action_catalog: ./failure-actions.yaml
 defaults:
   ordered_by: priority_ascending
   max_hook_duration_ms: 3000
@@ -25,10 +26,15 @@ handlers:
     priority: 20
     implementation: runtime.validation.enforce_limits
     reads: [payload.user_message, payload.attachments]
-    writes: [payload.normalized_content]
+    writes: [payload.normalized_content, payload.ingress_safety_request]
+    output_contract:
+      pointer: /payload/ingress_safety_request
+      schema_ref: ../schemas/safety-review-request.schema.json
     rule: >-
       Normalize Unicode; reject unsupported MIME; cap message, extracted text,
-      attachment count and conversation context using server configuration.
+      attachment count and conversation context using server configuration. Build
+      the safety request server-side with untrusted provenance and consent scopes;
+      the client cannot supply or override provenance hashes.
     on_error: deny_request
     error_code: INPUT_LIMIT_EXCEEDED
 
@@ -37,8 +43,17 @@ handlers:
     priority: 30
     implementation: skill.safety_review
     skill_ref: ../skills/safety-review.skill.yaml
-    reads: [payload.normalized_content, payload.content_origin, payload.consent]
-    writes: [payload.sanitized_content, payload.safety_flags]
+    reads: [payload.ingress_safety_request]
+    writes: [payload.ingress_safety_review, payload.sanitized_content, payload.safety_flags]
+    output_contract:
+      pointer: /payload/ingress_safety_review
+      schema_ref: ../schemas/safety-review.schema.json
+    configuration:
+      action_mapping:
+        allow: continue_with_sanitized_content
+        redact: continue_with_sanitized_content
+        block: deny_request
+        human_review: deny_request
     rule: >-
       Detect secrets and unnecessary PII, mark prompt injection as untrusted data,
       and never propagate a detected credential to handoff, model input or logs.
@@ -49,7 +64,7 @@ handlers:
     event: agent.before_call
     priority: 10
     implementation: runtime.policy.agent_skill_allowlist
-    reads: [payload.agent_id, payload.skill_ids]
+    reads: [metadata.agent_id, payload.skill_ids]
     writes: [payload.policy_decision]
     rule: >-
       Agent and every requested skill must match ai/skills/catalog.yaml; denied
@@ -73,7 +88,7 @@ handlers:
     event: agent.output_received
     priority: 10
     implementation: runtime.validation.json_schema
-    reads: [payload.agent_id, payload.raw_output, metadata.schema_version]
+    reads: [metadata.agent_id, payload.raw_output, metadata.schema_version]
     writes: [payload.validated_output, payload.validation_errors]
     rule: >-
       Parse strict JSON and validate against the schema pinned for the request.
@@ -97,8 +112,8 @@ handlers:
     event: response.before_render
     priority: 10
     implementation: runtime.transform.remove_json_pointer
-    applies_when: payload.agent_id == learning_evaluator
-    reads: [payload.validated_output]
+    applies_when: metadata.agent_id == learning_evaluator
+    reads: [payload.public_output]
     writes: [payload.public_output]
     configuration:
       remove: [/private_state]
@@ -110,11 +125,80 @@ handlers:
     on_error: deny_response
     error_code: PRIVATE_STATE_LEAK
 
+  - id: prepare_public_output
+    event: response.before_render
+    priority: 5
+    implementation: runtime.transform.clone_validated_output
+    reads: [payload.validated_output]
+    writes: [payload.public_output]
+    rule: >-
+      Deep-copy the schema-validated output into the public transformation buffer
+      for every agent. The renderer must never read validated_output directly.
+    on_error: deny_response
+    error_code: PUBLIC_OUTPUT_PREPARATION_FAILED
+
+  - id: apply_commercial_claim_decision
+    event: response.before_render
+    priority: 7
+    implementation: runtime.transform.apply_claim_decision
+    reads: [payload.public_output, payload.claim_decision]
+    writes: [payload.public_output]
+    rule: >-
+      Require a claim decision for every response. If status is sanitized, remove
+      every declared JSON pointer and assert no unverified price, schedule, seat,
+      certification, refund or benefit claim remains. If status is verified, bind
+      every surviving claim to a listed active server-catalog offer. Missing or
+      contradictory decisions fail closed before outbound safety review.
+    on_error: deny_response
+    error_code: COMMERCIAL_CLAIM_TRANSFORM_FAILED
+
+  - id: review_outbound_content
+    event: response.before_render
+    priority: 15
+    implementation: skill.safety_review
+    skill_ref: ../skills/safety-review.skill.yaml
+    reads:
+      - payload.public_output
+      - payload.outbound_provenance
+      - payload.requested_actions
+    writes: [payload.outbound_safety_review, payload.reviewed_public_output]
+    output_contract:
+      pointer: /payload/outbound_safety_review
+      schema_ref: ../schemas/safety-review.schema.json
+    configuration:
+      direction: outbound
+      intended_use: user_response
+      action_mapping:
+        allow: render_sanitized_content
+        redact: render_sanitized_content
+        block: deny_response
+        human_review: deny_response
+    rule: >-
+      Re-scan the exact post-transform content that would reach the client. Keep
+      provenance from model output through private-state/claim removal; block on
+      missing provenance, private state, credentials or an unmapped action.
+    on_error: deny_response
+    error_code: OUTBOUND_SAFETY_REVIEW_FAILED
+
+  - id: finalize_reviewed_render_output
+    event: response.before_render
+    priority: 17
+    implementation: runtime.safety.authorize_reviewed_output
+    reads: [payload.outbound_safety_review, payload.reviewed_public_output]
+    writes: [payload.render_output]
+    rule: >-
+      Set render_output only when the outbound review action is allow or redact,
+      continuation is continue, user_response is an allowed destination and the
+      reviewed object is the exact parsed sanitized_content. The renderer may
+      serialize only render_output; all other buffers are internal.
+    on_error: deny_response
+    error_code: RENDER_OUTPUT_NOT_AUTHORIZED
+
   - id: gate_external_or_high_risk_actions
     event: response.before_render
     priority: 20
     implementation: runtime.policy.human_review
-    reads: [payload.public_output, payload.requested_actions]
+    reads: [payload.render_output, payload.requested_actions]
     writes: [payload.review_required, payload.allowed_actions]
     configuration:
       always_review:

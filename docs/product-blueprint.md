@@ -54,7 +54,7 @@ Trang V1 là một conversion system một trang, gồm:
 - Vòng feedback chẩn đoán năm loại lỗi và đưa câu lệnh sửa tiếp.
 - Landing workshop 2 giờ, giá và đầu ra minh bạch.
 - Giới thiệu đúng bản chất Phase 3 và thu waitlist.
-- Form đăng ký lưu bền vững, có consent, chuẩn hóa email/số điện thoại và chống gửi trùng.
+- Form đăng ký lưu bền vững, có consent, chuẩn hóa email/số điện thoại và ghi nhận số lần gửi lặp.
 - Khối an toàn dữ liệu và giới hạn trách nhiệm.
 
 ## 5. Data model V1
@@ -63,7 +63,7 @@ Catalog prompt nên là nội dung version-controlled trong source. D1 chỉ lư
 
 Hiện tại:
 
-- `leads`: tên, kênh liên hệ, vai trò/ngành, intent, nguồn, consent, thời điểm tạo.
+- `leads`: tên, kênh liên hệ, vai trò/ngành, intent, nguồn, consent, thời điểm tạo, số lần gửi và lần gửi gần nhất.
 - Unique key theo `contact + intent` để double-click không tạo lead trùng.
 
 Khi có giao dịch thật mới thêm:
@@ -110,4 +110,3 @@ Những phần này chỉ mở sau khi dữ liệu funnel cho thấy chúng gi�
 - Tự động hóa thanh toán khi xác nhận thủ công trở thành nút thắt vận hành.
 - Thêm dashboard khi đã có nội dung trả phí cần quyền truy cập.
 - Xây Phase 3 khi học viên Phase 2 có workflow lặp lại và đủ dữ liệu test.
-

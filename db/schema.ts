@@ -20,6 +20,10 @@ export const leads = sqliteTable(
     source: text("source").notNull(),
     consent: integer("consent", { mode: "boolean" }).notNull(),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    submissionCount: integer("submission_count").notNull().default(1),
+    lastSubmittedAt: text("last_submitted_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     uniqueIndex("idx_leads_contact_stage").on(table.contact, table.stage),

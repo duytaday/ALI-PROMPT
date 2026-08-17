@@ -7,19 +7,36 @@
   "required": [
     "schema_version",
     "request_id",
+    "agent_id",
+    "review_id",
+    "direction",
+    "intended_use",
     "action",
+    "continuation",
     "risk_level",
     "sanitized_content",
     "detections",
+    "allowed_destinations",
     "safe_to_log",
-    "user_notice"
+    "user_notice",
+    "provenance"
   ],
   "properties": {
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "const": "1.1.0" },
     "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "agent_id": { "const": "safety_reviewer" },
+    "review_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "direction": { "enum": ["ingress", "outbound"] },
+    "intended_use": { "enum": ["model_input", "handoff", "log", "user_response"] },
     "action": { "enum": ["allow", "redact", "block", "human_review"] },
+    "continuation": { "enum": ["continue", "deny", "manual_review"] },
     "risk_level": { "enum": ["none", "low", "medium", "high", "critical"] },
-    "sanitized_content": { "type": ["string", "null"], "maxLength": 30000 },
+    "sanitized_content": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "minLength": 1, "maxLength": 30000 }
+      ]
+    },
     "detections": {
       "type": "array",
       "maxItems": 50,
@@ -35,12 +52,14 @@
               "prompt_injection",
               "unsafe_request",
               "commercial_claim",
-              "private_state_leak"
+              "private_state_leak",
+              "unapproved_action"
             ]
           },
           "severity": { "enum": ["low", "medium", "high", "critical"] },
           "location_hint": {
             "type": "string",
+            "minLength": 1,
             "description": "Vị trí hoặc loại field; không chứa lại giá trị nhạy cảm.",
             "maxLength": 300
           },
@@ -48,19 +67,195 @@
         }
       }
     },
+    "allowed_destinations": {
+      "type": "array",
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["model_input", "handoff", "log", "user_response"] }
+    },
     "safe_to_log": { "type": "boolean" },
-    "user_notice": { "type": ["string", "null"], "maxLength": 700 }
+    "user_notice": { "type": ["string", "null"], "maxLength": 700 },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content_id",
+        "source_event_id",
+        "content_origin",
+        "trust_level",
+        "source_actor_type",
+        "source_agent_id",
+        "content_sha256",
+        "transformations"
+      ],
+      "properties": {
+        "content_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "source_event_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "content_origin": { "enum": ["user", "upload", "tool", "model", "catalog", "system"] },
+        "trust_level": { "enum": ["untrusted", "server_verified"] },
+        "source_actor_type": {
+          "enum": ["anonymous_user", "authenticated_user", "agent", "system", "external_tool"]
+        },
+        "source_agent_id": { "type": ["string", "null"], "maxLength": 128 },
+        "content_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "transformations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "unicode_normalized",
+              "secret_redacted",
+              "pii_minimized",
+              "injection_demoted_to_data",
+              "commercial_claim_removed",
+              "private_state_removed",
+              "safety_reviewed_no_change"
+            ]
+          }
+        }
+      }
+    }
   },
   "allOf": [
     {
-      "if": { "properties": { "action": { "const": "block" } } },
-      "then": { "properties": { "sanitized_content": { "type": "null" } } }
+      "if": {
+        "required": ["action"],
+        "properties": { "action": { "const": "allow" } }
+      },
+      "then": {
+        "properties": {
+          "continuation": { "const": "continue" },
+          "sanitized_content": { "type": "string", "minLength": 1 },
+          "allowed_destinations": { "type": "array", "minItems": 1 }
+        }
+      }
     },
     {
       "if": {
+        "required": ["action"],
+        "properties": { "action": { "const": "redact" } }
+      },
+      "then": {
+        "properties": {
+          "continuation": { "const": "continue" },
+          "sanitized_content": { "type": "string", "minLength": 1 },
+          "detections": { "type": "array", "minItems": 1 },
+          "allowed_destinations": { "type": "array", "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["action"],
+        "properties": { "action": { "const": "block" } }
+      },
+      "then": {
+        "properties": {
+          "continuation": { "const": "deny" },
+          "sanitized_content": { "type": "null" },
+          "detections": { "type": "array", "minItems": 1 },
+          "allowed_destinations": { "type": "array", "maxItems": 0 },
+          "safe_to_log": { "const": false },
+          "user_notice": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["action"],
+        "properties": { "action": { "const": "human_review" } }
+      },
+      "then": {
+        "properties": {
+          "continuation": { "const": "manual_review" },
+          "sanitized_content": { "type": "null" },
+          "detections": { "type": "array", "minItems": 1 },
+          "allowed_destinations": { "type": "array", "maxItems": 0 },
+          "safe_to_log": { "const": false },
+          "user_notice": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["risk_level"],
         "properties": { "risk_level": { "enum": ["high", "critical"] } }
       },
-      "then": { "properties": { "safe_to_log": { "const": false } } }
+      "then": {
+        "properties": {
+          "action": { "enum": ["redact", "block", "human_review"] },
+          "detections": { "type": "array", "minItems": 1 },
+          "safe_to_log": { "const": false }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["risk_level"],
+        "properties": { "risk_level": { "const": "critical" } }
+      },
+      "then": {
+        "properties": { "action": { "enum": ["block", "human_review"] } }
+      }
+    },
+    {
+      "if": {
+        "required": ["detections"],
+        "properties": {
+          "detections": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "required": ["type"],
+              "properties": { "type": { "enum": ["secret", "commercial_claim"] } }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": { "action": { "enum": ["redact", "block", "human_review"] } }
+      }
+    },
+    {
+      "if": {
+        "required": ["direction", "continuation"],
+        "properties": {
+          "direction": { "const": "outbound" },
+          "continuation": { "const": "continue" }
+        }
+      },
+      "then": {
+        "properties": {
+          "allowed_destinations": {
+            "type": "array",
+            "contains": { "const": "user_response" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["detections"],
+        "properties": {
+          "detections": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "enum": ["private_state_leak", "unapproved_action", "unsafe_request"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": { "action": { "enum": ["block", "human_review"] } }
+      }
     }
   ]
 }

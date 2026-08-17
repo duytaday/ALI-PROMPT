@@ -60,5 +60,139 @@
         "schema_version": { "type": ["string", "null"], "maxLength": 64 }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "request.received" } } },
+      "then": { "properties": { "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/requestReceived" } } }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "request.safety_reviewed" } } },
+      "then": { "properties": { "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/requestSafetyReviewed" } } }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "route.selected" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/routeSelected" },
+          "metadata": { "type": "object", "properties": { "agent_id": { "const": "orchestrator" } } }
+        }
+      }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "agent.before_call" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/agentBeforeCall" },
+          "metadata": { "type": "object", "properties": { "agent_id": { "type": "string", "minLength": 1 } } }
+        }
+      }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "agent.output_received" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/agentOutputReceived" },
+          "metadata": { "type": "object", "properties": { "agent_id": { "type": "string", "minLength": 1 } } }
+        }
+      }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "agent.output_validated" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/agentOutputValidated" },
+          "metadata": { "type": "object", "properties": { "agent_id": { "type": "string", "minLength": 1 } } }
+        }
+      }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "learning.answer_submitted" } } },
+      "then": { "properties": { "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/learningAnswerSubmitted" } } }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "learning.stage_evaluated" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/learningStageEvaluated" },
+          "metadata": { "type": "object", "properties": { "agent_id": { "const": "learning_evaluator" } } }
+        }
+      }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "response.before_render" } } },
+      "then": {
+        "properties": {
+          "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/responseBeforeRender" },
+          "metadata": { "type": "object", "properties": { "agent_id": { "type": "string", "minLength": 1 } } }
+        }
+      }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "phase.signal_emitted" } } },
+      "then": { "properties": { "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/phaseSignalEmitted" } } }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "offer.before_render" } } },
+      "then": { "properties": { "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/offerBeforeRender" } } }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "response.rendered" } } },
+      "then": { "properties": { "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/responseRendered" } } }
+    },
+    {
+      "if": { "required": ["event_name"], "properties": { "event_name": { "const": "runtime.failed" } } },
+      "then": { "properties": { "payload": { "$ref": "hook-critical-payloads.schema.json#/$defs/runtimeFailed" } } }
+    },
+    {
+      "if": {
+        "required": ["event_name", "metadata"],
+        "properties": {
+          "event_name": { "enum": ["agent.output_validated", "response.before_render"] },
+          "metadata": { "type": "object", "required": ["agent_id"], "properties": { "agent_id": { "const": "orchestrator" } } }
+        }
+      },
+      "then": { "properties": { "payload": { "type": "object", "properties": { "validated_output": { "$ref": "orchestrator-decision.schema.json" } } } } }
+    },
+    {
+      "if": {
+        "required": ["event_name", "metadata"],
+        "properties": {
+          "event_name": { "enum": ["agent.output_validated", "response.before_render"] },
+          "metadata": { "type": "object", "required": ["agent_id"], "properties": { "agent_id": { "const": "prompt_coach" } } }
+        }
+      },
+      "then": { "properties": { "payload": { "type": "object", "properties": { "validated_output": { "$ref": "prompt-coach-result.schema.json" } } } } }
+    },
+    {
+      "if": {
+        "required": ["event_name", "metadata"],
+        "properties": {
+          "event_name": { "enum": ["agent.output_validated", "response.before_render"] },
+          "metadata": { "type": "object", "required": ["agent_id"], "properties": { "agent_id": { "const": "assistant_trainer" } } }
+        }
+      },
+      "then": { "properties": { "payload": { "type": "object", "properties": { "validated_output": { "$ref": "assistant-training-plan.schema.json" } } } } }
+    },
+    {
+      "if": {
+        "required": ["event_name", "metadata"],
+        "properties": {
+          "event_name": { "enum": ["agent.output_validated", "response.before_render"] },
+          "metadata": { "type": "object", "required": ["agent_id"], "properties": { "agent_id": { "const": "learning_evaluator" } } }
+        }
+      },
+      "then": { "properties": { "payload": { "type": "object", "properties": { "validated_output": { "$ref": "learning-evaluation.schema.json" } } } } }
+    },
+    {
+      "if": {
+        "required": ["event_name", "metadata"],
+        "properties": {
+          "event_name": { "enum": ["agent.output_validated", "response.before_render"] },
+          "metadata": { "type": "object", "required": ["agent_id"], "properties": { "agent_id": { "const": "agent_architect" } } }
+        }
+      },
+      "then": { "properties": { "payload": { "type": "object", "properties": { "validated_output": { "$ref": "agent-architecture.schema.json" } } } } }
+    }
+  ]
 }

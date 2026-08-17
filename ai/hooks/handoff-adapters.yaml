@@ -1,0 +1,196 @@
+api_version: aliprompt.ai/v1
+kind: HandoffAdapterCatalog
+metadata:
+  id: core_handoff_adapters
+  version: 1.0.0
+  output_schema: ../schemas/specialist-request.schema.json
+defaults:
+  source_content: sanitized_only
+  unknown_field_behavior: reject
+  missing_required_field_behavior: keep_route_pending
+  secret_propagation: forbidden
+  mapping_semantics:
+    source: Read the declared event path only.
+    const: Write the declared literal.
+    default: Use only for an optional field; never fill a missing required business fact.
+    compose: Build an object only from its declared child mappings.
+adapters:
+  - id: orchestrator_to_prompt_coach_v1
+    trigger_event: route.selected
+    route: prompt_coach
+    target_agent: prompt_coach
+    input_schema_ref: ../skills/transform-prompt.skill.yaml#/input/schema
+    required_sources:
+      - payload.route_decision.handoff.user_request
+      - payload.route_decision.handoff.objective
+      - payload.sanitized_context.locale
+      - payload.sanitized_context.user_level
+    field_mappings:
+      schema_version: {const: 1.0.0}
+      request_id: {source: event.request_id}
+      route: {const: prompt_coach}
+      target_agent: {const: prompt_coach}
+      adapter_id: {const: orchestrator_to_prompt_coach_v1}
+      input_schema_ref: {const: ../skills/transform-prompt.skill.yaml#/input/schema}
+      source_event_id: {source: event.event_id}
+      adapted_input:
+        compose:
+          request_id: {source: event.request_id}
+          agent_id: {const: prompt_coach}
+          task: {source: payload.route_decision.handoff.user_request}
+          original_prompt: {default: null}
+          context: {source: payload.sanitized_context.conversation_summary, default: null}
+          available_inputs: {source: payload.route_decision.handoff.known_facts}
+          constraints: {source: payload.route_decision.handoff.constraints}
+          desired_output: {source: payload.route_decision.handoff.objective}
+          user_level: {source: payload.sanitized_context.user_level}
+          locale: {source: payload.sanitized_context.locale}
+          handoff:
+            compose:
+              source_agent: {const: orchestrator}
+              target_agent: {const: prompt_coach}
+              adapter_id: {const: orchestrator_to_prompt_coach_v1}
+              user_request: {source: payload.route_decision.handoff.user_request}
+              objective: {source: payload.route_decision.handoff.objective}
+              known_facts: {source: payload.route_decision.handoff.known_facts}
+              missing_information: {source: payload.route_decision.handoff.missing_information}
+              constraints: {source: payload.route_decision.handoff.constraints}
+              consent_scopes: {source: payload.route_decision.handoff.consent_scopes}
+              provenance_event_id: {source: event.event_id}
+  - id: orchestrator_to_assistant_trainer_v1
+    trigger_event: route.selected
+    route: assistant_trainer
+    target_agent: assistant_trainer
+    input_schema_ref: ../skills/build-assistant-instruction.skill.yaml#/input/schema
+    required_sources:
+      - payload.route_decision.handoff.objective
+      - payload.sanitized_context.owner_role
+      - payload.sanitized_context.locale
+      - payload.sanitized_context.user_level
+    field_mappings:
+      schema_version: {const: 1.0.0}
+      request_id: {source: event.request_id}
+      route: {const: assistant_trainer}
+      target_agent: {const: assistant_trainer}
+      adapter_id: {const: orchestrator_to_assistant_trainer_v1}
+      input_schema_ref: {const: ../skills/build-assistant-instruction.skill.yaml#/input/schema}
+      source_event_id: {source: event.event_id}
+      adapted_input:
+        compose:
+          request_id: {source: event.request_id}
+          agent_id: {const: assistant_trainer}
+          assistant_goal: {source: payload.route_decision.handoff.objective}
+          owner_role: {source: payload.sanitized_context.owner_role}
+          target_users: {default: []}
+          jobs: {default: []}
+          current_failures: {default: []}
+          good_examples: {default: []}
+          bad_examples: {default: []}
+          knowledge_sources: {default: []}
+          allowed_tools: {default: []}
+          forbidden_actions: {default: []}
+          tone: {default: null}
+          review_policy: {default: null}
+          user_level: {source: payload.sanitized_context.user_level}
+          locale: {source: payload.sanitized_context.locale}
+          handoff:
+            compose:
+              source_agent: {const: orchestrator}
+              target_agent: {const: assistant_trainer}
+              adapter_id: {const: orchestrator_to_assistant_trainer_v1}
+              user_request: {source: payload.route_decision.handoff.user_request}
+              objective: {source: payload.route_decision.handoff.objective}
+              known_facts: {source: payload.route_decision.handoff.known_facts}
+              missing_information: {source: payload.route_decision.handoff.missing_information}
+              constraints: {source: payload.route_decision.handoff.constraints}
+              consent_scopes: {source: payload.route_decision.handoff.consent_scopes}
+              provenance_event_id: {source: event.event_id}
+  - id: checkpoint_to_learning_evaluator_v1
+    trigger_event: learning.answer_submitted
+    route: learning_evaluator
+    target_agent: learning_evaluator
+    input_schema_ref: ../schemas/learning-evaluator-request.schema.json
+    required_sources:
+      - payload.learning_checkpoint
+      - payload.answer_id
+      - payload.answer_criterion_ids
+      - payload.sanitized_answer
+      - payload.prior_attempts
+      - payload.user_level
+      - payload.locale
+    field_mappings:
+      schema_version: {const: 1.0.0}
+      request_id: {source: event.request_id}
+      route: {const: learning_evaluator}
+      target_agent: {const: learning_evaluator}
+      adapter_id: {const: checkpoint_to_learning_evaluator_v1}
+      input_schema_ref: {const: ../schemas/learning-evaluator-request.schema.json}
+      source_event_id: {source: event.event_id}
+      adapted_input:
+        compose:
+          schema_version: {const: 1.0.0}
+          request_id: {source: event.request_id}
+          agent_id: {const: learning_evaluator}
+          checkpoint: {source: payload.learning_checkpoint}
+          evidence: {default: []}
+          latest_user_answer:
+            compose:
+              evidence_id: {source: payload.answer_id}
+              criterion_ids: {source: payload.answer_criterion_ids}
+              kind: {const: user_answer}
+              content: {source: payload.sanitized_answer}
+              origin: {const: user}
+          prior_attempts: {source: payload.prior_attempts}
+          question_mode: {source: payload.learning_checkpoint.initial_question.type}
+          user_level: {source: payload.user_level}
+          locale: {source: payload.locale}
+  - id: orchestrator_to_agent_architect_v1
+    trigger_event: route.selected
+    route: agent_architect
+    target_agent: agent_architect
+    input_schema_ref: ../skills/draft-agent-system.skill.yaml#/input/schema
+    required_sources:
+      - payload.route_decision.handoff.objective
+      - payload.sanitized_context.workflow
+      - payload.sanitized_context.risk_tolerance
+      - payload.sanitized_context.locale
+      - payload.sanitized_context.user_level
+    field_mappings:
+      schema_version: {const: 1.0.0}
+      request_id: {source: event.request_id}
+      route: {const: agent_architect}
+      target_agent: {const: agent_architect}
+      adapter_id: {const: orchestrator_to_agent_architect_v1}
+      input_schema_ref: {const: ../skills/draft-agent-system.skill.yaml#/input/schema}
+      source_event_id: {source: event.event_id}
+      adapted_input:
+        compose:
+          request_id: {source: event.request_id}
+          agent_id: {const: agent_architect}
+          business_outcome: {source: payload.route_decision.handoff.objective}
+          workflow: {source: payload.sanitized_context.workflow}
+          actors: {default: []}
+          frequency: {default: null}
+          triggers: {default: []}
+          inputs: {default: []}
+          data_sources: {default: []}
+          tools: {default: []}
+          decisions: {default: []}
+          approval_rules: {default: []}
+          failure_history: {default: []}
+          risk_tolerance: {source: payload.sanitized_context.risk_tolerance}
+          constraints: {source: payload.route_decision.handoff.constraints}
+          user_level: {source: payload.sanitized_context.user_level}
+          locale: {source: payload.sanitized_context.locale}
+          handoff:
+            compose:
+              source_agent: {const: orchestrator}
+              target_agent: {const: agent_architect}
+              adapter_id: {const: orchestrator_to_agent_architect_v1}
+              user_request: {source: payload.route_decision.handoff.user_request}
+              objective: {source: payload.route_decision.handoff.objective}
+              known_facts: {source: payload.route_decision.handoff.known_facts}
+              missing_information: {source: payload.route_decision.handoff.missing_information}
+              constraints: {source: payload.route_decision.handoff.constraints}
+              consent_scopes: {source: payload.route_decision.handoff.consent_scopes}
+              provenance_event_id: {source: event.event_id}

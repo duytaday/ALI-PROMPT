@@ -2,7 +2,7 @@ api_version: aliprompt.ai/v1
 kind: Skill
 metadata:
   id: classify_learning_need
-  version: 1.0.0
+  version: 1.1.0
   owner_agent: orchestrator
   description: >-
     Phân loại nhu cầu hiện tại vào đúng agent/phase dựa trên bằng chứng, đồng thời
@@ -17,9 +17,10 @@ input:
   schema:
     type: object
     additionalProperties: false
-    required: [request_id, user_message, locale, consent]
+    required: [request_id, agent_id, user_message, locale, consent]
     properties:
       request_id: {type: string, minLength: 1, maxLength: 128}
+      agent_id: {const: orchestrator}
       user_message: {type: string, minLength: 1, maxLength: 12000}
       locale: {type: string, minLength: 2, maxLength: 20}
       conversation_summary: {type: [string, "null"], maxLength: 6000}
@@ -70,6 +71,8 @@ acceptance_tests:
     given: Người dùng muốn viết prompt tạo 10 tiêu đề Facebook cho spa.
     expect:
       - primary_route bằng prompt_coach
+      - agent_id bằng orchestrator
+      - handoff.target_agent và handoff.adapter_id khớp primary_route
       - phase_recommendation bằng phase_1
       - không tự tạo 10 tiêu đề trong routing output
   - id: route-assistant-instability

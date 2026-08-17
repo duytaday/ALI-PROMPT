@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { ensureLeadStorage, getDb } from "../../../db";
 import { leads } from "../../../db/schema";
 
@@ -16,6 +17,12 @@ function errorResponse(error: string, status: number) {
 
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasHoneypotValue(value: unknown) {
+  if (typeof value === "string") return value.trim().length > 0;
+
+  return value !== undefined && value !== null;
 }
 
 function cleanSingleLine(value: unknown, maxLength: number) {
@@ -77,6 +84,10 @@ export async function POST(request: Request) {
     if (parsed.error) return parsed.error;
 
     const payload = parsed.payload;
+    if (hasHoneypotValue(payload.website)) {
+      return Response.json({ ok: true }, { status: 201 });
+    }
+
     const name = cleanSingleLine(payload.name, 100);
     const contact = normalizeContact(payload.contact);
     const role = cleanSingleLine(payload.role, 120);
@@ -108,8 +119,20 @@ export async function POST(request: Request) {
         stage: stage as "workshop" | "agent_waitlist" | "prompt_pack",
         source,
         consent: true,
+        submissionCount: 1,
+        lastSubmittedAt: sql`CURRENT_TIMESTAMP`,
       })
-      .onConflictDoNothing({ target: [leads.contact, leads.stage] });
+      .onConflictDoUpdate({
+        target: [leads.contact, leads.stage],
+        set: {
+          name,
+          role,
+          source,
+          consent: true,
+          submissionCount: sql`${leads.submissionCount} + 1`,
+          lastSubmittedAt: sql`CURRENT_TIMESTAMP`,
+        },
+      });
 
     return Response.json({ ok: true }, { status: 201 });
   } catch {

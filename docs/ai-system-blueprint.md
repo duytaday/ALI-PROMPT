@@ -1,6 +1,6 @@
 # Blueprint hệ thống AI cho AliPrompt.vn
 
-**Trạng thái:** đặc tả kiến trúc v1.0, chưa phải runtime đã tích hợp  
+**Trạng thái:** contract kiến trúc v1.1 đã qua validator, chưa phải runtime đã tích hợp
 **Phạm vi:** lớp AI phục vụ funnel Phase 1 → Phase 2 → Phase 3  
 **Nguồn contract:** `ai/agents`, `ai/skills`, `ai/schemas`, `ai/hooks`, `ai/evals`
 

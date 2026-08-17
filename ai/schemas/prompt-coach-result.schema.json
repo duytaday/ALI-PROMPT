@@ -20,15 +20,15 @@
     "test_cases",
     "safety_flags",
     "phase_signal",
-    "teach_back_question",
+    "learning_checkpoint",
     "refusal_reason"
   ],
   "properties": {
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "const": "1.1.0" },
     "request_id": { "type": "string", "minLength": 1, "maxLength": 128 },
     "agent_id": { "const": "prompt_coach" },
     "status": { "enum": ["ready", "needs_context", "refused"] },
-    "task_outcome": { "type": "string", "maxLength": 800 },
+    "task_outcome": { "type": ["string", "null"], "maxLength": 800 },
     "assumptions": {
       "type": "array",
       "maxItems": 10,
@@ -36,7 +36,6 @@
     },
     "diagnosis": {
       "type": "array",
-      "minItems": 1,
       "maxItems": 7,
       "items": {
         "type": "object",
@@ -60,7 +59,7 @@
         }
       }
     },
-    "improved_prompt": { "type": "string", "maxLength": 12000 },
+    "improved_prompt": { "type": ["string", "null"], "maxLength": 12000 },
     "placeholders": {
       "type": "array",
       "maxItems": 30,
@@ -86,31 +85,13 @@
       "items": { "type": "string", "maxLength": 300 }
     },
     "usage_guide": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["fill_order", "run_instructions", "verification_checklist"],
-      "properties": {
-        "fill_order": {
-          "type": "array",
-          "maxItems": 12,
-          "items": { "type": "string", "maxLength": 250 }
-        },
-        "run_instructions": {
-          "type": "array",
-          "maxItems": 8,
-          "items": { "type": "string", "maxLength": 350 }
-        },
-        "verification_checklist": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 10,
-          "items": { "type": "string", "maxLength": 350 }
-        }
-      }
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/usageGuide" }
+      ]
     },
     "test_cases": {
       "type": "array",
-      "minItems": 2,
       "maxItems": 4,
       "items": {
         "type": "object",
@@ -141,17 +122,103 @@
       }
     },
     "phase_signal": { "enum": ["none", "assistant_training"] },
-    "teach_back_question": { "type": "string", "maxLength": 500 },
+    "learning_checkpoint": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "learning-checkpoint.schema.json" }
+      ]
+    },
     "refusal_reason": { "type": ["string", "null"], "maxLength": 600 }
+  },
+  "$defs": {
+    "usageGuide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fill_order", "run_instructions", "verification_checklist"],
+      "properties": {
+        "fill_order": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 250 }
+        },
+        "run_instructions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 350 }
+        },
+        "verification_checklist": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 350 }
+        }
+      }
+    }
   },
   "allOf": [
     {
-      "if": { "properties": { "status": { "const": "needs_context" } } },
-      "then": { "properties": { "clarifying_questions": { "minItems": 1 } } }
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "ready" } }
+      },
+      "then": {
+        "properties": {
+          "task_outcome": { "type": "string", "minLength": 1 },
+          "diagnosis": { "type": "array", "minItems": 1 },
+          "improved_prompt": { "type": "string", "minLength": 1 },
+          "usage_guide": { "$ref": "#/$defs/usageGuide" },
+          "test_cases": { "type": "array", "minItems": 2 },
+          "clarifying_questions": { "type": "array", "maxItems": 0 },
+          "learning_checkpoint": {
+            "allOf": [
+              { "$ref": "learning-checkpoint.schema.json" },
+              { "type": "object", "properties": { "source_agent": { "const": "prompt_coach" } } }
+            ]
+          },
+          "refusal_reason": { "type": "null" }
+        }
+      }
     },
     {
-      "if": { "properties": { "status": { "const": "refused" } } },
-      "then": { "properties": { "refusal_reason": { "type": "string", "minLength": 1 } } }
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "needs_context" } }
+      },
+      "then": {
+        "properties": {
+          "clarifying_questions": { "type": "array", "minItems": 1 },
+          "learning_checkpoint": { "type": "null" },
+          "refusal_reason": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["status"],
+        "properties": { "status": { "const": "refused" } }
+      },
+      "then": {
+        "properties": {
+          "task_outcome": { "type": "null" },
+          "assumptions": { "type": "array", "maxItems": 0 },
+          "diagnosis": { "type": "array", "maxItems": 0 },
+          "improved_prompt": { "type": "null" },
+          "placeholders": { "type": "array", "maxItems": 0 },
+          "key_changes": { "type": "array", "maxItems": 0 },
+          "clarifying_questions": { "type": "array", "maxItems": 0 },
+          "usage_guide": { "type": "null" },
+          "test_cases": { "type": "array", "maxItems": 0 },
+          "safety_flags": { "type": "array", "minItems": 1 },
+          "phase_signal": { "const": "none" },
+          "learning_checkpoint": { "type": "null" },
+          "refusal_reason": { "type": "string", "minLength": 1 }
+        }
+      }
     }
   ]
 }

@@ -2,7 +2,7 @@ api_version: aliprompt.ai/v1
 kind: Skill
 metadata:
   id: draft_agent_system
-  version: 1.0.0
+  version: 1.1.0
   owner_agent: agent_architect
   description: >-
     Chuyển workflow lặp lại thành bản thiết kế agent tối giản có contract, tool
@@ -17,9 +17,10 @@ input:
   schema:
     type: object
     additionalProperties: false
-    required: [request_id, business_outcome, workflow, locale, user_level]
+    required: [request_id, agent_id, business_outcome, workflow, risk_tolerance, locale, user_level]
     properties:
       request_id: {type: string, minLength: 1, maxLength: 128}
+      agent_id: {const: agent_architect}
       business_outcome: {type: string, minLength: 1, maxLength: 3000}
       workflow:
         type: array

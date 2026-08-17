@@ -2,42 +2,71 @@ api_version: aliprompt.ai/v1
 kind: HookPipeline
 metadata:
   id: learning_funnel
-  version: 1.0.0
+  version: 1.1.0
   event_schema: ../schemas/hook-event.schema.json
 defaults:
   ordered_by: priority_ascending
   commercial_pressure: forbidden
   advancement_requires_evidence: true
 handlers:
-  - id: require_teach_back
+  - id: adapt_route_to_specialist
+    event: route.selected
+    priority: 10
+    implementation: runtime.routing.apply_handoff_adapter
+    adapter_catalog: ./handoff-adapters.yaml
+    applies_when: >-
+      payload.route_decision.primary_route in
+      [prompt_coach, assistant_trainer, agent_architect]
+    reads: [payload.route_decision, payload.sanitized_context]
+    writes: [payload.specialist_request]
+    output_contract:
+      pointer: /payload/specialist_request
+      schema_ref: ../schemas/specialist-request.schema.json
+    rule: >-
+      Route, target_agent and adapter_id must match. The adapter may only copy
+      sanitized fields or explicit defaults; it must never invent business facts.
+    on_error: deny_agent_call
+    error_code: HANDOFF_ADAPTER_FAILED
+
+  - id: validate_learning_checkpoint
     event: agent.output_validated
     priority: 50
-    implementation: runtime.learning.require_teach_back
+    implementation: runtime.learning.validate_checkpoint
     applies_when: >-
-      payload.agent_id in [prompt_coach, assistant_trainer] and
-      payload.validated_output.status != refused
+      metadata.agent_id in [prompt_coach, assistant_trainer] and
+      payload.validated_output.status == ready
     reads: [payload.validated_output]
     writes: [payload.learning_checkpoint]
+    output_contract:
+      pointer: /payload/learning_checkpoint
+      schema_ref: ../schemas/learning-checkpoint.schema.json
     rule: >-
-      Specialist output must contain one teach-back question tied to the current
-      objective before the UI offers the next learning stage.
-    on_error: inject_generic_teach_back_not_advance
-    error_code: TEACH_BACK_REQUIRED
+      Validate unique criterion IDs, exactly one rubric row per criterion, at
+      least one required criterion and source_agent parity. Do not synthesize a
+      generic checkpoint when validation fails.
+    on_error: keep_stage_locked
+    error_code: LEARNING_CHECKPOINT_INVALID
 
   - id: route_submitted_answer_to_evaluator
     event: learning.answer_submitted
     priority: 10
     implementation: runtime.learning.route_evaluator
     reads:
-      - payload.stage_id
-      - payload.learning_objectives
-      - payload.rubric
+      - payload.learning_checkpoint
+      - payload.answer_id
+      - payload.answer_criterion_ids
       - payload.sanitized_answer
       - payload.prior_attempts
+      - payload.user_level
+      - payload.locale
     writes: [payload.evaluator_request]
+    output_contract:
+      pointer: /payload/evaluator_request
+      schema_ref: ../schemas/learning-evaluator-request.schema.json
     rule: >-
-      Only the Learning Evaluator may mark a criterion mastered. A button click,
-      elapsed time or user self-assertion cannot mark mastery.
+      Copy criteria and rubric only from the validated checkpoint, bind evidence
+      to known criterion IDs and require agent_id learning_evaluator. Only the
+      Learning Evaluator may mark mastery; self-assertion cannot mark mastery.
     on_error: keep_stage_locked
     error_code: EVALUATION_UNAVAILABLE
 
@@ -45,11 +74,14 @@ handlers:
     event: learning.stage_evaluated
     priority: 20
     implementation: runtime.learning.mastery_gate
-    reads: [payload.stage_status, payload.criteria, payload.next_action]
+    reads: [payload.evaluation, payload.learning_checkpoint]
     writes: [payload.stage_access]
     rule: >-
-      Unlock the next stage only when stage_status is mastered and every required
-      criterion is mastered; otherwise preserve progress and show the next question.
+      Treat the server-owned learning_checkpoint as authoritative. Require matching
+      checkpoint_id, stage_id and an exact criterion ID set; copy required flags from
+      the checkpoint rather than trusting model output. Unlock the next stage only
+      when every checkpoint criterion marked required is mastered; otherwise preserve
+      progress and show the next question.
     on_error: keep_stage_locked
     error_code: MASTERY_GATE_FAILED
 

@@ -2,7 +2,7 @@ api_version: aliprompt.ai/v1
 kind: Skill
 metadata:
   id: transform_prompt
-  version: 1.0.0
+  version: 1.1.0
   owner_agent: prompt_coach
   description: >-
     Chẩn đoán và biến nhiệm vụ cụ thể thành prompt có placeholder, tiêu chí kiểm
@@ -17,9 +17,10 @@ input:
   schema:
     type: object
     additionalProperties: false
-    required: [request_id, task, locale, user_level]
+    required: [request_id, agent_id, task, locale, user_level]
     properties:
       request_id: {type: string, minLength: 1, maxLength: 128}
+      agent_id: {const: prompt_coach}
       task: {type: string, minLength: 1, maxLength: 3000}
       original_prompt: {type: [string, "null"], maxLength: 12000}
       context: {type: [string, "null"], maxLength: 6000}
@@ -63,6 +64,7 @@ acceptance_tests:
       - diagnosis đánh dấu thiếu context hoặc output_format
       - improved_prompt dùng placeholder thay vì bịa sản phẩm
       - có ít nhất 2 test_cases
+      - learning_checkpoint có criterion bắt buộc và rubric khớp criterion
   - id: short-prompt-can-be-good
     given: Prompt ngắn nhưng có mục tiêu, input, constraint và định dạng rõ.
     expect:

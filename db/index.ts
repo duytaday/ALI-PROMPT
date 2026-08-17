@@ -4,6 +4,8 @@ import * as schema from "./schema";
 
 let leadStorageReady: Promise<void> | undefined;
 
+const LEGACY_LAST_SUBMITTED_AT = "1970-01-01 00:00:00";
+
 function getD1() {
   if (!env.DB) {
     throw new Error(
@@ -32,6 +34,8 @@ export async function ensureLeadStorage() {
           source TEXT NOT NULL,
           consent INTEGER NOT NULL,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          submission_count INTEGER DEFAULT 1 NOT NULL,
+          last_submitted_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
           CONSTRAINT leads_stage_allowed CHECK(stage_or_intent IN ('workshop', 'agent_waitlist', 'prompt_pack')),
           CONSTRAINT leads_consent_required CHECK(consent = 1)
         )`),
@@ -39,7 +43,60 @@ export async function ensureLeadStorage() {
           ON leads(contact, stage_or_intent)`),
         d1.prepare("PRAGMA optimize"),
       ])
-      .then(() => undefined)
+      .then(async () => {
+        const columnInfo = await d1
+          .prepare("PRAGMA table_info(leads)")
+          .all<{ name: string }>();
+        const columnNames = new Set(
+          columnInfo.results.map((column) => column.name),
+        );
+        const upgrades = [];
+        const requiredColumns: string[] = [];
+
+        if (!columnNames.has("submission_count")) {
+          requiredColumns.push("submission_count");
+          upgrades.push(
+            d1.prepare(
+              "ALTER TABLE leads ADD COLUMN submission_count INTEGER DEFAULT 1 NOT NULL",
+            ),
+          );
+        }
+
+        if (!columnNames.has("last_submitted_at")) {
+          requiredColumns.push("last_submitted_at");
+          upgrades.push(
+            d1.prepare(
+              `ALTER TABLE leads ADD COLUMN last_submitted_at TEXT DEFAULT '${LEGACY_LAST_SUBMITTED_AT}' NOT NULL`,
+            ),
+          );
+        }
+
+        if (upgrades.length > 0) {
+          try {
+            await d1.batch(upgrades);
+          } catch (error) {
+            const refreshedInfo = await d1
+              .prepare("PRAGMA table_info(leads)")
+              .all<{ name: string }>();
+            const refreshedNames = new Set(
+              refreshedInfo.results.map((column) => column.name),
+            );
+
+            if (requiredColumns.some((column) => !refreshedNames.has(column))) {
+              throw error;
+            }
+          }
+        }
+
+        if (!columnNames.has("last_submitted_at")) {
+          await d1
+            .prepare(
+              "UPDATE leads SET last_submitted_at = created_at WHERE last_submitted_at = ?",
+            )
+            .bind(LEGACY_LAST_SUBMITTED_AT)
+            .run();
+        }
+      })
       .catch((error) => {
         leadStorageReady = undefined;
         throw error;

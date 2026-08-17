@@ -247,7 +247,7 @@
   "allOf": [
     {
       "if": { "properties": { "status": { "const": "needs_context" } } },
-      "then": { "properties": { "clarifying_questions": { "minItems": 1 } } }
+      "then": { "properties": { "clarifying_questions": { "type": "array", "minItems": 1 } } }
     },
     {
       "if": { "properties": { "status": { "const": "refused" } } },

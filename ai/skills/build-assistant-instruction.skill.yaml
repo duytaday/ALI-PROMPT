@@ -2,7 +2,7 @@ api_version: aliprompt.ai/v1
 kind: Skill
 metadata:
   id: build_assistant_instruction
-  version: 1.0.0
+  version: 1.1.0
   owner_agent: assistant_trainer
   description: >-
     Tạo assistant spec, system instruction, phân lớp thông tin, kế hoạch dạy tăng
@@ -17,9 +17,10 @@ input:
   schema:
     type: object
     additionalProperties: false
-    required: [request_id, assistant_goal, owner_role, locale, user_level]
+    required: [request_id, agent_id, assistant_goal, owner_role, locale, user_level]
     properties:
       request_id: {type: string, minLength: 1, maxLength: 128}
+      agent_id: {const: assistant_trainer}
       assistant_goal: {type: string, minLength: 1, maxLength: 3000}
       owner_role: {type: string, minLength: 1, maxLength: 500}
       target_users:
@@ -97,6 +98,7 @@ acceptance_tests:
     expect:
       - calibration_tests có ít nhất 4 loại bắt buộc
       - có prompt_injection và approval_required
+      - learning_checkpoint có criterion bắt buộc và rubric khớp criterion
   - id: tool-is-design-only
     given: allowed_tools có “gửi email”.
     expect:

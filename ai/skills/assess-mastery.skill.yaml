@@ -2,7 +2,7 @@ api_version: aliprompt.ai/v1
 kind: Skill
 metadata:
   id: assess_mastery
-  version: 1.0.0
+  version: 1.1.0
   owner_agent: learning_evaluator
   description: >-
     Chấm bằng chứng học tập theo criterion, chỉ mở cổng khi mọi criterion bắt buộc
@@ -14,42 +14,7 @@ execution:
   max_attempts: 2
   timeout_ms: 10000
 input:
-  schema:
-    type: object
-    additionalProperties: false
-    required: [request_id, stage_id, learning_objectives, rubric, locale, user_level]
-    properties:
-      request_id: {type: string, minLength: 1, maxLength: 128}
-      stage_id: {type: string, minLength: 1, maxLength: 128}
-      learning_objectives:
-        type: array
-        minItems: 1
-        maxItems: 20
-        items:
-          type: object
-          required: [criterion_id, statement, required]
-          properties:
-            criterion_id: {type: string}
-            statement: {type: string, maxLength: 700}
-            required: {type: boolean}
-      rubric:
-        type: array
-        minItems: 1
-        maxItems: 20
-        items: {type: object}
-      evidence:
-        type: array
-        maxItems: 30
-        items: {type: string, maxLength: 5000}
-      latest_user_answer: {type: [string, "null"], maxLength: 8000}
-      prior_attempts:
-        type: array
-        maxItems: 20
-        items: {type: object}
-      question_mode: {enum: [auto, open_ended, multiple_choice, scenario]}
-      user_level: {enum: [beginner, intermediate, advanced]}
-      locale: {type: string, minLength: 2, maxLength: 20}
-      source_summary: {type: [string, "null"], maxLength: 6000}
+  schema_ref: ../schemas/learning-evaluator-request.schema.json
 output:
   schema_ref: ../schemas/learning-evaluation.schema.json
   content_type: application/json
@@ -86,6 +51,11 @@ acceptance_tests:
     expect:
       - stage_status bằng in_progress
       - không advance
+  - id: checkpoint-rubric-parity
+    given: Checkpoint có criterion trùng ID, rubric thiếu criterion hoặc evidence trỏ ID lạ.
+    expect:
+      - request bị runtime từ chối trước model
+      - không tạo learning evaluation hay thay đổi stage access
   - id: no-answer-in-user-view
     given: question_mode bằng multiple_choice.
     expect:

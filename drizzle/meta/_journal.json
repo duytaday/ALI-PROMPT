@@ -8,6 +8,13 @@
       "when": 1786980070386,
       "tag": "0000_strong_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1786981448436,
+      "tag": "0001_demonic_alice",
+      "breakpoints": true
     }
   ]
 }

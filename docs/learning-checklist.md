@@ -23,6 +23,7 @@ Tài liệu này theo dõi những điều chủ dự án cần hiểu và có t
 - [ ] Giải thích được vì sao V1 tối ưu cho một hành động chính thay vì xây sàn học tập đầy đủ.
 - [ ] Nói được vai trò, đầu vào, đầu ra và ranh giới của từng AI agent.
 - [ ] Phân biệt được agent, skill, prompt và hook.
+- [ ] Phân biệt được blueprint/contract với runtime đã gọi model và eval đã chạy thật.
 - [ ] Giải thích được vì sao agent không tự ý hứa kết quả, giảm giá hoặc gửi dữ liệu nhạy cảm.
 - [ ] Nêu được các edge case: người dùng mới hoàn toàn, kỳ vọng sai, prompt chứa dữ liệu nhạy cảm, thanh toán lỗi, đăng ký trùng.
 
@@ -32,9 +33,9 @@ Tài liệu này theo dõi những điều chủ dự án cần hiểu và có t
 - [ ] Xác định được chỉ số chứng minh workshop tạo giá trị thật.
 - [ ] Nói được nội dung nào con người phải duyệt trước khi xuất bản hoặc gửi cho khách.
 - [ ] Giải thích được khi nào nên đầu tư đăng nhập, thanh toán tự động, CRM và hệ thống học tập.
+- [ ] Chốt được ai kiểm soát dữ liệu, giữ lead bao lâu và xử lý yêu cầu xóa bằng cách nào trước khi mở public.
 - [ ] Có thể tự mô tả một vòng cải tiến: quan sát → chẩn đoán → thử nghiệm → đo → cập nhật prompt/skill.
 
 ## Bằng chứng đã hiểu
 
 Ghi lại câu trả lời, quyết định hoặc ví dụ do chủ dự án tự diễn đạt trong các buổi rà soát. Không đánh dấu chỉ vì đã đọc tài liệu.
-
