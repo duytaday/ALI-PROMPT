@@ -1,0 +1,83 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: community-submission-moderation
+  version: 1.2.0
+spec:
+  purpose: Accept authenticated-member free-prompt contributions, optionally test a disabled-by-default approved guest parity path, control spam, and publish only moderator-approved public projections.
+  triggers:
+    - member prompt submission, attachment, moderation, edit/resubmit, support, or publication changes
+    - the separately approved guest-submission parity flag or its abuse/privacy controls change
+    - contributor identity, community report, or editorial blog publication changes
+  ownership:
+    owner: catalog-seo-trust-engineer
+    allowedAgents: [catalog-seo-trust-engineer, domain-data-engineer, frontend-ux-engineer, commerce-security-engineer, qa-release-reviewer]
+  inputs:
+    trusted:
+      submissionPolicy: {type: versioned-policy, required: true}
+      guestSubmissionFlag: {type: approved-feature-flag, default: disabled, required: true}
+      mediaPolicy: {type: versioned-policy, required: true}
+      mediaPipelineReceipt: {type: contributor-media-pipeline-output, required: false}
+      moderationPolicy: {type: versioned-state-machine, required: true}
+      publicProjection: {type: schema, required: true}
+      ownedPaths: {type: array<repository-path>, required: true}
+    untrusted:
+      guestContactAndProof: {type: identity-input, reason: private-and-attacker-controlled}
+      promptFields: {type: text, reason: spam-xss-pii-copyright-and-injection-risk}
+      imageBytes: {type: bytes, reason: malformed-polyglot-metadata-and-resource-exhaustion-risk}
+      moderationNotesAndReports: {type: text, reason: sensitive-hostile-and-pii-bearing}
+  outputSchema:
+    submission: {fields: [submissionId, actorClass, publicHandleCandidate, priceMinor, status, contentHash, mediaRefs, idempotencyKey, createdAt]}
+    mediaReceipt: {fields: [privateRawObjectHash, publicSanitizedRefs, detectedType, dimensions, outputFormats, outputHashes, metadataRemoved, scanDecision, environment]}
+    stateMachine:
+      draft: [pending_moderation]
+      pending_moderation: [changes_requested, rejected, published]
+      changes_requested: [draft]
+      rejected: []
+      published: []
+    moderationDecision: {fields: [submissionId, fromStatus, toStatus, reasonCode, moderatorIdHash, policyVersion, decidedAt]}
+    publication: {fields: [promptId, slug, publicContributorHandle, publicFields, publishedAt, canonicalUrl]}
+  permissions:
+    allowedTools: [filesystem-read, scoped-write, local-database, isolated-media-decoder, malware-scan, spam-classifier, test-runner]
+    readScopes: ["<repositoryRoot>/src/**", "<repositoryRoot>/schema/**", "<repositoryRoot>/tests/**"]
+    writeScopes: ["<ownedPaths>"]
+    forbiddenSideEffects:
+      - publishing directly from submission, classifier, report count, model output, or unverified guest proof
+      - retaining original image metadata by default or serving active/original upload bytes from an executable origin
+      - mixing raw quarantine and sanitized public derivatives in one Blob store or assuming object-level access can override store-level access mode
+      - contributor self-publication or any transition outside draft, pending_moderation, changes_requested, rejected, and published
+      - exposing guest contact, email, auth subject, IP/device signals, private moderation notes, reporter identity, or raw abuse evidence
+      - accepting a nonzero community price or creating seller, checkout, payout, commission, tax-beneficiary, or KYC state
+      - copying reference-site prompts, images, brand assets, markup, or distinctive copy
+  workflow:
+    - Require authenticated-member session, CSRF defense, ownership binding, opaque idempotency, and bounded anti-automation for launch submission; keep private identity/abuse signals outside public projections.
+    - Deny guest submission by default; exercise a guest branch only when an explicit unexpired parity flag carries abuse/privacy approval, environment, owner, and rollback, then require equivalent verified ownership and stricter bounded controls.
+    - Normalize and bound titles, categories, prompt text, descriptions, handle candidates, URLs, and declared licenses; detect secrets and personal data before storage or review.
+    - Obtain a contributor-media-pipeline receipt: raw bytes remain in an environment-scoped private quarantine Blob store and only metadata-free re-encoded derivatives enter a separate public Blob store.
+    - Apply layered rate, velocity, duplicate-content/hash, reputation, and challenge controls with accessible recovery and review-safe reason codes.
+    - Move submissions only through draft to pending_moderation, then to changes_requested, rejected, or published under server-side RBAC and optimistic concurrency; changes_requested returns to draft before resubmission.
+    - Require a human moderator or explicit policy-authorized ALIPROMPT operator for publication; retain append-only decision history and give contributors privacy-safe status, reason, edit/resubmit, and support paths without adding hidden workflow states.
+    - On publication force price to zero, attribute only the approved public handle, create a clean public projection, and exclude private identity, detection signals, reports, and notes.
+    - Apply equivalent RBAC, revision, sanitization, preview, schedule, publish, unpublish, canonical, and audit controls to blog posts; only editor/operator roles may publish editorial content.
+  timeoutRetry:
+    timeoutSeconds: 900
+    maxAttempts: 2
+    retryOn: [isolated-decoder-timeout, malware-scanner-unavailable, serialization-conflict]
+    neverRetryOn: [malware-detected, media-policy-failure, pii-leak, unauthorized-publication, nonzero-community-price]
+  acceptanceTests:
+    - Authenticated-member submissions are idempotent, always zero-price, enter moderation, and create no commerce seller or payout/KYC state.
+    - Guest submission is denied when the parity flag is absent, disabled, stale, or unapproved; when explicitly enabled it remains ownership-bound, zero-price, moderation-gated, privacy-safe, and unable to create broader contributor or commerce authority.
+    - Submission transitions use only draft, pending_moderation, changes_requested, rejected, and published; contributors cannot self-publish and only an authorized moderator or ALIPROMPT operator can reach published.
+    - Valid images produce bounded optimized derivatives with metadata removed; spoofed, active, oversized, animated when disallowed, and decompression-bomb inputs fail closed.
+    - Spam controls resist burst, replay, duplicate, and linked-identity abuse without disclosing detection internals or blocking an accessible edit/resubmit or support path.
+    - Only authorized moderators can transition or publish, concurrent decisions cannot overwrite each other, and every decision is auditable.
+    - Public prompt, contributor, leaderboard, blog, search, metadata, cache, and telemetry projections contain no private contact, auth ID, IP/device data, moderation note, report identity, raw evidence, or secret.
+    - Blog drafts, previews, schedules, revisions, publish/unpublish transitions, links, and rich text are authorized, sanitized, canonical, and recoverable.
+  rollback:
+    strategy: close-submission-and-publication-flags-preserve-queues-and-audit
+    preserve: [submission-records, moderation-history, media-receipts, report-ledger, blog-revisions]
+    verification: New submissions and publications stop while existing safe public pages, status history, and support records remain consistent.
+  telemetry:
+    events: [submission.received, submission.rate_limited, media.rejected, media.transformed, moderation.transitioned, contribution.published, blog.published]
+    fields: [taskId, correlationId, actorClass, status, reasonCode, policyVersion, mediaType, aggregateCount, durationMs, outcome]
+    redact: [promptContent, imageBytes, imageMetadata, guestContact, emails, authIds, ipAddresses, deviceSignals, moderationNotes, reportText, reporterIdentity]

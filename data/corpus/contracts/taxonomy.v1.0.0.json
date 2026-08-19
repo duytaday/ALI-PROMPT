@@ -1,0 +1,211 @@
+{
+  "contractType": "DATA10K controlled taxonomy",
+  "contractVersion": "1.0.0",
+  "programId": "DATA10K",
+  "canonicalTarget": 10000,
+  "locales": ["vi", "en"],
+  "countingUnit": "canonical_prompt_key",
+  "categoryCount": 25,
+  "quotaPerCategory": 400,
+  "rawGenerationOversupplyCountsTowardTarget": false,
+  "antiPaddingRule": {
+    "minimumMaterialAxisDifferences": 3,
+    "mustDifferOnAtLeastOne": ["designObjective", "deliverable"],
+    "neverSufficientAlone": ["subjectNoun", "colorPalette", "locale", "adjectiveStack"],
+    "axes": [
+      "designObjective",
+      "deliverable",
+      "audienceAndChannel",
+      "lifecycleMoment",
+      "informationComplexity",
+      "compositionSystem",
+      "mediumAndProductionMethod",
+      "aspectRatioAndPlacement",
+      "interactionOrTemporalBehavior",
+      "operationalConstraints"
+    ]
+  },
+  "commonDistribution": {
+    "complexity": {"simple": 80, "intermediate": 200, "advanced": 120},
+    "aspectRatioBands": {"square": 80, "portrait": 80, "landscape": 80, "vertical": 80, "adaptive_or_special": 80},
+    "localeCoverage": {"vi": 400, "en": 400},
+    "localizationRowsCountTowardCanonicalTarget": false
+  },
+  "categories": [
+    {
+      "slug": "brand-identity-systems",
+      "name": {"vi": "Hệ thống nhận diện thương hiệu", "en": "Brand identity systems"},
+      "canonicalQuota": 400,
+      "definition": "Original, fictional identity systems expressed through reusable visual rules and applications.",
+      "useCaseFamilies": ["identity foundations", "launch toolkit", "environmental applications", "digital brand system", "brand governance board"]
+    },
+    {
+      "slug": "abstract-mark-logo-exploration",
+      "name": {"vi": "Khám phá biểu trưng trừu tượng", "en": "Abstract mark and logo exploration"},
+      "canonicalQuota": 400,
+      "definition": "Non-infringing abstract symbols for fictional briefs; no real marks, wordmarks, or confusingly similar trade dress.",
+      "useCaseFamilies": ["geometric mark study", "negative-space symbol", "modular symbol family", "monoline emblem", "responsive mark system"]
+    },
+    {
+      "slug": "packaging-design",
+      "name": {"vi": "Thiết kế bao bì", "en": "Packaging design"},
+      "canonicalQuota": 400,
+      "definition": "Fictional packaging concepts focused on structure, shelf hierarchy, material, and compliant placeholder labeling.",
+      "useCaseFamilies": ["primary pack", "secondary pack", "gift set", "refill system", "limited seasonal pack"]
+    },
+    {
+      "slug": "product-photography",
+      "name": {"vi": "Nhiếp ảnh sản phẩm", "en": "Product photography"},
+      "canonicalQuota": 400,
+      "definition": "Studio or contextual images of unbranded, fictional products with explicit photographic control.",
+      "useCaseFamilies": ["clean catalog hero", "material macro", "in-use still life", "comparison layout", "detail sequence"]
+    },
+    {
+      "slug": "advertising-key-visuals",
+      "name": {"vi": "Hình ảnh chủ đạo quảng cáo", "en": "Advertising key visuals"},
+      "canonicalQuota": 400,
+      "definition": "Campaign-defining visual concepts for fictional offerings, without deceptive claims or real brands.",
+      "useCaseFamilies": ["launch reveal", "benefit metaphor", "seasonal campaign", "event promotion", "multi-format master visual"]
+    },
+    {
+      "slug": "social-media-campaign-design",
+      "name": {"vi": "Thiết kế chiến dịch mạng xã hội", "en": "Social media campaign design"},
+      "canonicalQuota": 400,
+      "definition": "Platform-aware visual systems and post sequences for fictional, non-deceptive campaigns.",
+      "useCaseFamilies": ["awareness carousel", "educational series", "countdown sequence", "community prompt", "launch story set"]
+    },
+    {
+      "slug": "poster-design",
+      "name": {"vi": "Thiết kế áp phích", "en": "Poster design"},
+      "canonicalQuota": 400,
+      "definition": "Original poster systems balancing message hierarchy, distance readability, and print or digital placement.",
+      "useCaseFamilies": ["cultural event", "public-interest message", "fictional exhibition", "typographic announcement", "experimental series"]
+    },
+    {
+      "slug": "editorial-magazine-design",
+      "name": {"vi": "Thiết kế biên tập và tạp chí", "en": "Editorial and magazine design"},
+      "canonicalQuota": 400,
+      "definition": "Original editorial layouts and art direction using fictional copy and subjects.",
+      "useCaseFamilies": ["feature opener", "long-form spread", "service page", "photo essay", "special issue system"]
+    },
+    {
+      "slug": "original-book-album-cover-concepts",
+      "name": {"vi": "Ý tưởng bìa sách và album nguyên bản", "en": "Original book and album cover concepts"},
+      "canonicalQuota": 400,
+      "definition": "Covers for invented works and creators, avoiding existing titles, artwork, recognizable trade dress, and likenesses.",
+      "useCaseFamilies": ["fiction cover", "nonfiction cover", "poetry collection", "instrumental album", "audio anthology"]
+    },
+    {
+      "slug": "typography-lettering-exploration",
+      "name": {"vi": "Khám phá chữ và lettering", "en": "Typography and lettering exploration"},
+      "canonicalQuota": 400,
+      "definition": "Original letterform studies with placeholder copy and explicit legibility constraints.",
+      "useCaseFamilies": ["display lettering", "editorial type system", "kinetic word frame", "multilingual hierarchy", "material letterform"]
+    },
+    {
+      "slug": "infographics-data-visuals",
+      "name": {"vi": "Đồ họa thông tin và trực quan dữ liệu", "en": "Infographics and data visuals"},
+      "canonicalQuota": 400,
+      "definition": "Diagram and data-communication concepts using clearly fictional or supplied non-sensitive values.",
+      "useCaseFamilies": ["process explainer", "comparison graphic", "timeline", "system map", "small-multiple dashboard visual"]
+    },
+    {
+      "slug": "ui-ux-hero-onboarding-illustration",
+      "name": {"vi": "Minh họa hero và onboarding UI/UX", "en": "UI/UX hero and onboarding illustration"},
+      "canonicalQuota": 400,
+      "definition": "Interface-supporting illustration systems that preserve space, hierarchy, accessibility, and responsive cropping.",
+      "useCaseFamilies": ["landing hero", "onboarding step", "empty state", "feature explainer", "success state"]
+    },
+    {
+      "slug": "icons-pictograms",
+      "name": {"vi": "Biểu tượng và ký hiệu hình", "en": "Icons and pictograms"},
+      "canonicalQuota": 400,
+      "definition": "Coherent original symbol sets optimized for specific sizes, contexts, and accessibility.",
+      "useCaseFamilies": ["interface actions", "service categories", "wayfinding", "status indicators", "instructional pictograms"]
+    },
+    {
+      "slug": "2d-editorial-illustration",
+      "name": {"vi": "Minh họa biên tập 2D", "en": "2D editorial illustration"},
+      "canonicalQuota": 400,
+      "definition": "Conceptual two-dimensional editorial images expressed through general techniques, never artist imitation.",
+      "useCaseFamilies": ["abstract concept", "human-scale scene", "spot illustration", "narrative sequence", "opinion opener"]
+    },
+    {
+      "slug": "3d-illustration",
+      "name": {"vi": "Minh họa 3D", "en": "3D illustration"},
+      "canonicalQuota": 400,
+      "definition": "Original dimensional scenes with controlled geometry, materials, lighting, depth, and render purpose.",
+      "useCaseFamilies": ["object composition", "character-free narrative", "spatial metaphor", "material study", "modular scene kit"]
+    },
+    {
+      "slug": "isometric-scenes",
+      "name": {"vi": "Cảnh đẳng phối", "en": "Isometric scenes"},
+      "canonicalQuota": 400,
+      "definition": "Structured isometric environments and process scenes with readable layers and no misleading technical claims.",
+      "useCaseFamilies": ["workflow scene", "service ecosystem", "building cutaway", "logistics map", "modular neighborhood"]
+    },
+    {
+      "slug": "patterns-textures-materials",
+      "name": {"vi": "Hoa văn, bề mặt và vật liệu", "en": "Patterns, textures and materials"},
+      "canonicalQuota": 400,
+      "definition": "Original repeat systems, surface studies, and material libraries with production-aware constraints.",
+      "useCaseFamilies": ["seamless repeat", "placement pattern", "surface texture", "material swatch family", "embossed relief"]
+    },
+    {
+      "slug": "presentation-product-mockups",
+      "name": {"vi": "Mô phỏng trình bày và sản phẩm", "en": "Presentation and product mockups"},
+      "canonicalQuota": 400,
+      "definition": "Neutral mockup scenes for presenting original work without counterfeit devices, documents, or brands.",
+      "useCaseFamilies": ["stationery presentation", "packaging lineup", "device-neutral screen", "signage context", "material sample board"]
+    },
+    {
+      "slug": "architecture-visualization",
+      "name": {"vi": "Diễn họa kiến trúc", "en": "Architecture visualization"},
+      "canonicalQuota": 400,
+      "definition": "Conceptual, non-permit architectural visualization that avoids safety or engineering certification claims.",
+      "useCaseFamilies": ["exterior daylight", "exterior night", "massing study", "public-space concept", "landscape integration"]
+    },
+    {
+      "slug": "interior-visualization",
+      "name": {"vi": "Diễn họa nội thất", "en": "Interior visualization"},
+      "canonicalQuota": 400,
+      "definition": "Original interior concepts emphasizing spatial function, light, material, and camera composition.",
+      "useCaseFamilies": ["residential room", "hospitality space", "workplace zone", "retail-neutral space", "small-space solution"]
+    },
+    {
+      "slug": "fashion-editorial",
+      "name": {"vi": "Biên tập thời trang", "en": "Fashion editorial"},
+      "canonicalQuota": 400,
+      "definition": "Fictional fashion stories with consenting adult synthetic models, original garments, and no brand imitation.",
+      "useCaseFamilies": ["studio story", "location story", "material study", "accessory-neutral feature", "seasonal look sequence"]
+    },
+    {
+      "slug": "food-beverage-imagery",
+      "name": {"vi": "Hình ảnh ẩm thực và đồ uống", "en": "Food and beverage imagery"},
+      "canonicalQuota": 400,
+      "definition": "Unbranded culinary imagery with safe styling and no health, origin, or ingredient deception.",
+      "useCaseFamilies": ["menu hero", "ingredient story", "preparation moment", "beverage still life", "table scene"]
+    },
+    {
+      "slug": "beauty-cosmetics-imagery",
+      "name": {"vi": "Hình ảnh mỹ phẩm và làm đẹp", "en": "Beauty and cosmetics imagery"},
+      "canonicalQuota": 400,
+      "definition": "Unbranded cosmetic imagery without medical claims, body shaming, unsafe procedures, or real-person likenesses.",
+      "useCaseFamilies": ["product texture", "routine still life", "ingredient metaphor", "color range", "campaign portrait detail"]
+    },
+    {
+      "slug": "portrait-lifestyle-photography",
+      "name": {"vi": "Nhiếp ảnh chân dung và đời sống", "en": "Portrait and lifestyle photography"},
+      "canonicalQuota": 400,
+      "definition": "Respectful fictional adult portraits and lifestyle scenes with no public figures, private people, or sensitive inference.",
+      "useCaseFamilies": ["environmental portrait", "small-group activity", "workday moment", "home routine", "outdoor lifestyle"]
+    },
+    {
+      "slug": "motion-storyboard-keyframes",
+      "name": {"vi": "Storyboard chuyển động và khung hình chính", "en": "Motion storyboard and keyframes"},
+      "canonicalQuota": 400,
+      "definition": "Original motion concepts represented as ordered frames with continuity, timing, and transition intent.",
+      "useCaseFamilies": ["title sequence", "product-neutral reveal", "process animation", "interface transition", "short narrative beat"]
+    }
+  ]
+}

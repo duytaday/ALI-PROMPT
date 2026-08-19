@@ -1,0 +1,75 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: vertical-slice-planning
+  version: 1.2.0
+spec:
+  purpose: Turn validated features into small, deployable end-to-end slices with explicit dependencies and reversibility.
+  triggers:
+    - repository discovery and feature inventory are complete
+    - an epic spans UI, API, persistence, security, or operations
+    - multiple agents need non-overlapping file ownership
+  ownership:
+    owner: platform-product-architect
+    allowedAgents: [orchestrator, platform-product-architect, commerce-security-engineer, qa-release-reviewer]
+  inputs:
+    trusted:
+      repositoryMap: {type: repo-discovery-output, required: true}
+      featureInventory: {type: cleanroom-feature-inventory-output, required: true}
+      approvedProductBrief: {type: product-discovery-prioritization-output, fields: [activeContract, objective, priority, scope, nonGoals, acceptanceIntent, metrics, approvals], required: true}
+      constraints: {type: object, fields: [deadline, runtime, hosting, compliance], required: true}
+    untrusted:
+      estimates: {type: number-or-text, reason: uncertain-until-validated}
+      stakeholderNotes: {type: text, reason: may-conflict-with-system-invariants}
+  outputSchema:
+    slices:
+      itemFields: [id, sprintId, predecessorSprintId, predecessorAcceptance, applicableGates, exitAcceptance, outcome, actors, preconditions, ui, api, data, authz, tests, telemetry, dependencies, ownedPaths, risk, rollback, done]
+    dependencyGraph:
+      fields: [nodes, directedEdges, criticalPath, parallelGroups]
+    decisions:
+      itemFields: [id, question, options, choice, rationale, consequence, revisitTrigger]
+  permissions:
+    allowedTools: [filesystem-read, rg, git-status, markdown-write]
+    readScopes: ["<repositoryRoot>/**"]
+    writeScopes: ["<repositoryRoot>/docs/plans/**"]
+    forbiddenSideEffects:
+      - source, schema, lockfile, infrastructure, or runtime mutation
+      - parallel slices owning the same path without an explicit handoff
+      - hiding security, migration, observability, or rollback work inside generic tasks
+  workflow:
+    - Validate input versions, Product Owner approval, active product contract, unresolved risks, product scope, and current repository fingerprint.
+    - Validate the invocation sprint envelope against the canonical functional S0-S7 sequence; require the exact predecessor Sx_ACCEPTED label and canonical reviewer evidence before dispatching current-sprint work.
+    - "Assign functions exactly: S0 audit/product contract/ADRs with no app code; S1 native Next.js/Vercel foundation, environment, Preview, and Postgres migration scaffolding; S2 identity/RBAC/member contributor workspace; S3 public catalog/discovery/detail/theme/a11y/SEO; S4 Blob upload/quarantine/sanitization/submission/moderation; S5 engagement/favorites/library/profiles/leaderboard/blog; S6 ALIPROMPT-only sandbox commerce/webhook/entitlement/refund; S7 hardening/full isolated Preview/migration rehearsal/production cutover approval."
+    - Apply G0-G7 as orthogonal cumulative quality gates using the canonical applicableGates set for each sprint; never infer one quality gate from the sprint number.
+    - "Define invariants first: ALIPROMPT-only commerce, free-only community contribution, server price and authorization, verified-payment entitlement, privacy-safe public identity, idempotency, and clean-room originality."
+    - "Cover required capability slices: discovery; recommendation rails; cards/quick view; engagement; submission/moderation; auth; favorites/library; contributor profile/leaderboard; blog publishing; adaptive theme/floating actions; paid commerce."
+    - Slice by independently demonstrable visitor, contributor, buyer, moderator, editor, or operator outcome, not by technical layer.
+    - For each slice enumerate success, empty, anonymous, unauthorized, invalid, spam, privacy, retry, duplicate, race, dependency-failure, and reduced-capability branches.
+    - Assign owned paths, interfaces, prerequisites, risk level, tests, telemetry, rollout flag, and rollback.
+    - Split platform work into evidence-producing slices for legacy inventory, native Next.js preview, provider-neutral Postgres/Drizzle reconciliation, isolated Blob upload, environment/webhook/cron security, cutover, observation, and separately approved legacy retirement.
+    - Build a DAG; expose parallel groups and require explicit handoffs at shared interfaces.
+    - Gate commerce work behind schema and threat-model readiness; finish with release evidence.
+  timeoutRetry:
+    timeoutSeconds: 420
+    maxAttempts: 2
+    retryOn: [stale-repository-fingerprint]
+    neverRetryOn: [unresolved-product-scope, ownership-conflict, invariant-conflict]
+  acceptanceTests:
+    - Every feature maps to one slice or a documented exclusion.
+    - Every planned slice traces to the approved product brief, outcome, priority, and acceptance intent.
+    - Every slice demonstrates a user outcome through UI/API/data/tests where applicable.
+    - The dependency graph is acyclic and parallel slices have disjoint owned paths.
+    - Commerce slices explicitly test tampered price, unauthorized access, duplicate webhook, and failed payment.
+    - Contribution slices force price to zero, enter moderation, redact PII, and create no seller, payout, commission, tax, or KYC state.
+    - Discovery, engagement, leaderboard, and blog slices define abuse-resistant event provenance and privacy-safe public projections.
+    - Each slice has a measurable done condition and executable rollback.
+    - Each slice records sprint ID, predecessor sprint/acceptance, applicable gates, exit acceptance, evidence refs, and reviewer acceptance inside existing planning/handoff structures; no next sprint is dispatched until every applicable gate passes and Sx_ACCEPTED is issued.
+    - S0 contains no application-code, schema, infrastructure, dependency, or runtime mutation; its output is audit, product contract, ADR, risk, and authorized plan evidence only.
+    - No plan deletes vinext, Cloudflare, D1, legacy domains, backups, or rollback artifacts before proved parity, data reconciliation, observation, rollback drill, and separate retirement approval.
+  rollback:
+    strategy: revert-task-owned-plan-files
+    verification: no non-plan file differs from baseline.
+  telemetry:
+    events: [skill.started, slice.created, conflict.detected, plan.approved]
+    fields: [taskId, sliceCount, dependencyCount, maxRisk, unresolvedDecisionCount, outcome]
+    redact: [stakeholderPersonalData, repositoryFileContents, secrets, credentials]

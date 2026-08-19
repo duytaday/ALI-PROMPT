@@ -1,6 +1,6 @@
 import { desc } from "drizzle-orm";
 import { getAdminUser } from "../../../../lib/admin-auth";
-import { ensureLeadStorage, getDb } from "../../../../db";
+import { getDb } from "../../../../db";
 import { leads } from "../../../../db/schema";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,6 @@ export async function GET() {
     return Response.json({ error: "Not authorized." }, { status: 403 });
   }
 
-  await ensureLeadStorage();
   const rows = await getDb()
     .select()
     .from(leads)

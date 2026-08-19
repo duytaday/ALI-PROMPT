@@ -1,0 +1,78 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: search-seo
+  version: 1.2.0
+spec:
+  purpose: Make public prompts, contributors, and blog posts discoverable through deterministic search, abuse-aware rails, and truthful canonical metadata without leaking protected content or identity data.
+  triggers:
+    - q/category/author discovery, viewed/liked/new rails, contributor/blog discovery, pagination, sitemap, robots, metadata, or structured data changes
+    - public discovery performance or indexing quality is inadequate
+  ownership:
+    owner: catalog-seo-trust-engineer
+    allowedAgents: [catalog-seo-trust-engineer, frontend-ux-engineer, domain-data-engineer, qa-release-reviewer]
+  inputs:
+    trusted:
+      publicProductView: {type: schema, fields: [id, slug, title, summary, category, tags, authorHandle, priceMinor, currency, status, publishedAt, updatedAt], required: true}
+      publicContributorView: {type: schema, fields: [handle, displayName, bio, avatarUrl, publishedFreePromptCount, eligibleAggregateSignals], required: true}
+      publicBlogView: {type: schema, fields: [slug, title, excerpt, authorHandle, coverUrl, status, publishedAt, updatedAt], required: true}
+      canonicalOrigin: {type: https-origin, required: true}
+      indexingPolicy: {type: route-policy, required: true}
+      ownedPaths: {type: array<repository-path>, required: true}
+    untrusted:
+      query: {type: string, reason: attacker-controlled}
+      filters: {type: object, reason: attacker-controlled}
+      productText: {type: text, reason: may-contain-markup-or-secrets}
+      crawlerHeaders: {type: headers, reason: spoofable}
+  outputSchema:
+    searchRequest: {fields: [normalizedQuery, categoryIds, authorHandles, tagIds, minPriceMinor, maxPriceMinor, sortEnum, cursor, pageSize]}
+    searchResponse: {fields: [items, nextCursor, totalApproximate, appliedFilters, queryFingerprint]}
+    rails: {itemFields: [railId, eligibilityWindow, rankingVersion, publicItems, nextCursor]}
+    seoDocument: {fields: [title, description, canonicalUrl, robots, openGraph, jsonLd, alternates]}
+    indexPolicy: {fields: [routePattern, indexable, reason, sitemapEligible]}
+  permissions:
+    allowedTools: [filesystem-read, scoped-write, local-database, search-benchmark, html-validator, test-runner]
+    readScopes: ["<repositoryRoot>/src/**", "<repositoryRoot>/schema/**", "<repositoryRoot>/tests/**"]
+    writeScopes: ["<ownedPaths>"]
+    forbiddenSideEffects:
+      - exposing purchased prompt bodies, drafts, private profiles, internal IDs, or entitlement data in index/search output
+      - raw query interpolation, arbitrary sort/field selection, unbounded page size, or wildcard crawler bypass
+      - cloaking, fabricated reviews/availability/prices, keyword stuffing, or indexing checkout/account/search-result pages
+      - mutating catalog price or product state from the search index
+      - indexing guest contact, email, auth IDs, moderation notes, IP/device signals, private profiles, or sub-threshold leaderboard evidence
+      - allowing community-contributed prompts to carry a nonzero price or seller identity
+      - indexing Vercel preview deployments, private Blob quarantine objects, migration endpoints, webhook routes, cron routes, or environment-specific callback URLs
+  workflow:
+    - Define one allowlisted public projection and deny all fields not explicitly public.
+    - Normalize Unicode and whitespace; bound query length/page size; parse q, category, author, filters, and sort through enums and typed parameters.
+    - Use stable tie-breaking and signed/opaque cursors so identical snapshots produce identical ordering.
+    - Build viewed, liked, and new rails from validated deduplicated events, eligibility policy, explicit time windows, stable tie-breaking, minimum privacy thresholds, and a versioned ranking rule.
+    - Prefer database/search-engine parameters and bounded indexes; escape rendered highlights and snippets.
+    - Generate server-rendered unique metadata, absolute canonical URLs, and schema-valid Product, ProfilePage, and Article JSON-LD from authoritative public views.
+    - Publish blog drafts only through editor/operator RBAC, sanitize supported rich text and links, preserve revisions, and apply scheduled/published/unpublished transitions atomically.
+    - Apply route-level robots and sitemap policy; exclude noncanonical facets, private routes, drafts, and internal search pages.
+    - Force preview deployments and operational routes to noindex/noarchive and omit them from production sitemap/feed/canonical discovery; production canonical origin is environment-bound.
+    - Test relevance fixtures, injection resistance, leakage, canonicalization, structured data, and query budgets.
+  timeoutRetry:
+    timeoutSeconds: 900
+    maxAttempts: 2
+    retryOn: [local-index-startup, benchmark-noise]
+    neverRetryOn: [private-data-leak, query-injection, canonical-origin-mismatch]
+  acceptanceTests:
+    - Same normalized query and catalog snapshot produce stable ordering and cursor continuation.
+    - q/category/author combinations are deterministic, linkable, bounded, and never expose unpublished prompts or private contributor fields.
+    - Viewed, liked, and new rails exclude ineligible/private/moderated items and resist replayed or self-generated raw counters.
+    - Injection payloads are inert; unsupported filters/sorts fail with bounded validation errors.
+    - Search, HTML, JSON-LD, sitemap, and caches contain no protected prompt body or private entity.
+    - Canonicals collapse tracking parameters and noncanonical facets to the approved public route.
+    - Displayed and structured-data price/currency equal the server-authoritative public product view.
+    - Approved query plans and latency fixtures remain within the declared budget.
+    - Blog preview, publish, update, schedule, unpublish, canonical, feed, and sitemap states follow editor authorization and never execute stored markup.
+  rollback:
+    strategy: disable-new-search-or-seo-flag-and-restore-previous-index-alias
+    preserve: [authoritative-catalog, prior-index, crawl-audit]
+    verification: canonical public routes and prior search remain available.
+  telemetry:
+    events: [search.executed, search.rejected, index.built, seo.rendered, leak.check.failed]
+    fields: [taskId, queryFingerprint, filterNames, resultCount, latencyMs, cacheStatus, outcome]
+    redact: [rawQuery, productText, promptContent, userIdentifiers, fullUrls, crawlerIp]

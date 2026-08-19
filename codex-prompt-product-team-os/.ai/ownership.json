@@ -1,0 +1,201 @@
+{
+  "principles": {
+    "one_dri_per_artifact": true,
+    "one_writer_per_path_per_worktree": true,
+    "human_final_approval": [
+      "pricing",
+      "licensing policy",
+      "new personal-data collection",
+      "irreversible migration",
+      "material scope change",
+      "production release"
+    ]
+  },
+  "roles": {
+    "product_hq": {
+      "decision_rights": [
+        "vision",
+        "roadmap",
+        "priority",
+        "scope",
+        "acceptance criteria",
+        "release scope"
+      ],
+      "write_paths": [
+        "docs/product/**",
+        ".ai/tasks/**",
+        ".ai/active-task.json",
+        ".ai/context/**"
+      ],
+      "must_consult": [
+        "solution_architect",
+        "prompt_product_architect",
+        "product_ux"
+      ],
+      "must_approve": []
+    },
+    "solution_architect": {
+      "decision_rights": [
+        "architecture",
+        "domain boundaries",
+        "data contracts",
+        "ADRs",
+        "migration strategy",
+        "NFRs"
+      ],
+      "write_paths": [
+        "docs/architecture/**",
+        "docs/DOMAIN_MODEL.md",
+        "docs/adr/**"
+      ],
+      "must_consult": [
+        "security_reviewer",
+        "prompt_product_architect",
+        "implementation_lead"
+      ],
+      "must_approve": [
+        "database schema",
+        "payment/entitlement architecture",
+        "irreversible technical change"
+      ]
+    },
+    "product_ux": {
+      "decision_rights": [
+        "user flows",
+        "information architecture",
+        "interaction behavior",
+        "accessibility",
+        "content hierarchy"
+      ],
+      "write_paths": [
+        "docs/ux/**",
+        "design/**"
+      ],
+      "must_consult": [
+        "product_hq",
+        "prompt_product_architect",
+        "security_reviewer"
+      ],
+      "must_approve": [
+        "material UX behavior"
+      ]
+    },
+    "prompt_product_architect": {
+      "decision_rights": [
+        "prompt taxonomy",
+        "prompt schema",
+        "variables",
+        "compatibility",
+        "versioning",
+        "preview policy",
+        "eval policy"
+      ],
+      "write_paths": [
+        "docs/prompt-products/**",
+        "prompts/**",
+        "evals/**",
+        "packages/prompt-domain/**"
+      ],
+      "must_consult": [
+        "solution_architect",
+        "security_reviewer",
+        "product_hq"
+      ],
+      "must_approve": [
+        "prompt schema",
+        "prompt release quality threshold",
+        "prompt version migration"
+      ]
+    },
+    "implementation_lead": {
+      "decision_rights": [
+        "implementation plan",
+        "code integration",
+        "bounded refactor",
+        "test implementation"
+      ],
+      "write_paths": [
+        "apps/**",
+        "packages/**",
+        "tests/**",
+        "scripts/**"
+      ],
+      "must_consult": [
+        "solution_architect",
+        "product_ux",
+        "prompt_product_architect"
+      ],
+      "must_approve": [
+        "merged implementation evidence"
+      ]
+    },
+    "qa_release": {
+      "decision_rights": [
+        "test strategy",
+        "defect severity",
+        "release recommendation",
+        "evidence sufficiency"
+      ],
+      "write_paths": [
+        "tests/**",
+        "docs/qa/**",
+        "reports/**"
+      ],
+      "must_consult": [
+        "product_hq",
+        "implementation_lead",
+        "security_reviewer"
+      ],
+      "must_approve": [
+        "release test evidence"
+      ]
+    },
+    "security_reviewer": {
+      "decision_rights": [
+        "security requirements",
+        "privacy classification",
+        "security finding severity",
+        "security release gate"
+      ],
+      "write_paths": [
+        "docs/security/**",
+        "reports/security/**"
+      ],
+      "must_consult": [
+        "solution_architect",
+        "implementation_lead",
+        "product_hq"
+      ],
+      "must_approve": [
+        "auth",
+        "payments",
+        "entitlements",
+        "PII",
+        "secrets",
+        "external tools",
+        "prompt execution"
+      ]
+    },
+    "data_growth": {
+      "decision_rights": [
+        "metric definitions",
+        "event taxonomy",
+        "experiment design",
+        "data quality rules"
+      ],
+      "write_paths": [
+        "docs/analytics/**",
+        "analytics/**"
+      ],
+      "must_consult": [
+        "product_hq",
+        "security_reviewer",
+        "implementation_lead"
+      ],
+      "must_approve": [
+        "analytics schema",
+        "experiment measurement"
+      ]
+    }
+  }
+}

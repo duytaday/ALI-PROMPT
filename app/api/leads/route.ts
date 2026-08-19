@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { ensureLeadStorage, getDb } from "../../../db";
+import { getDb } from "../../../db";
 import { leads } from "../../../db/schema";
 
 const MAX_BODY_BYTES = 8 * 1024;
@@ -107,7 +107,6 @@ export async function POST(request: Request) {
       return errorResponse("Consent is required.", 400);
     }
 
-    await ensureLeadStorage();
     const db = getDb();
     await db
       .insert(leads)

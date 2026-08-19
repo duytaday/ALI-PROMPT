@@ -1,0 +1,71 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: identity-engagement-library
+  version: 1.2.0
+spec:
+  purpose: Implement privacy-preserving authentication, engagement actions, favorites, library access, contributor profiles, and leaderboard reads.
+  triggers:
+    - sign-up, sign-in, verification, recovery, sign-out, session, or account privacy changes
+    - copy, share, favorite, vote, report, history, library, profile, or leaderboard changes
+  ownership:
+    owner: frontend-ux-engineer
+    allowedAgents: [frontend-ux-engineer, domain-data-engineer, commerce-security-engineer, catalog-seo-trust-engineer, qa-release-reviewer]
+  inputs:
+    trusted:
+      identityPolicy: {type: versioned-policy, required: true}
+      authorizationMatrix: {type: versioned-policy, required: true}
+      publicProfileProjection: {type: schema, required: true}
+      rankingPolicy: {type: versioned-policy, required: true}
+      ownedPaths: {type: array<repository-path>, required: true}
+    untrusted:
+      credentialsAndTokens: {type: secret-input, reason: attacker-controlled-and-never-loggable}
+      redirectAndReturnState: {type: url-state, reason: open-redirect-and-csrf-risk}
+      handlesAndProfileText: {type: text, reason: impersonation-xss-and-pii-risk}
+      engagementEvents: {type: events, reason: replay-spam-and-ranking-manipulation-risk}
+  outputSchema:
+    authDecision: {fields: [subjectId, sessionId, assurance, allowed, reasonCode, correlationId]}
+    engagementDecision: {fields: [action, resourceId, effectiveState, idempotencyKey, reasonCode]}
+    libraryItem: {fields: [productId, acquisitionType, entitlementStatus, favorited, lastViewedAt, publicMetadata]}
+    publicContributor: {fields: [handle, displayName, bio, avatarUrl, publishedFreePromptCount, eligibleAggregateSignals]}
+    leaderboardRow: {fields: [window, rank, handle, thresholdedScore, rankingVersion]}
+  permissions:
+    allowedTools: [filesystem-read, scoped-write, local-database, test-runner, browser-test, auth-sandbox]
+    readScopes: ["<repositoryRoot>/src/**", "<repositoryRoot>/schema/**", "<repositoryRoot>/tests/**"]
+    writeScopes: ["<ownedPaths>"]
+    forbiddenSideEffects:
+      - logging passwords, reset/verification tokens, cookies, session IDs, email, IP/device signals, or private profile fields
+      - trusting client subject, role, favorite/vote/report state, counters, entitlement, return URL, or leaderboard score
+      - exposing whether an email exists through wording, status, latency, or recovery behavior
+      - converting a contributor into a seller or creating price, payout, commission, tax-beneficiary, or KYC state
+      - exposing auth, database, Blob, payment, webhook, email-provider, or CRON_SECRET values to client code or crossing preview/production identity and session stores
+  workflow:
+    - Implement sign-up, verification, sign-in, recovery/reset, sign-out, expiry, rotation, revocation, and safe same-origin continuation with generic anti-enumeration responses.
+    - Derive identity and role from the server session; require CSRF defense for cookie mutations, re-authentication for sensitive changes, and bounded anti-automation controls.
+    - Define copy eligibility separately for public previews, published free content, and actively entitled paid content; never log clipboard content.
+    - Canonicalize share targets to allowlisted public URLs and use platform share with a safe copy-link fallback.
+    - Make favorite and vote mutations subject-resource unique and idempotent; validate report reason, deduplicate/rate-limit it, and never expose reporter identity publicly.
+    - Build favorites and library from server-authorized joins; separate favorites, free claims, paid entitlements, recent views, refunded/revoked states, and empty/error states.
+    - Moderate unique public handles and profile text; allow explicit profile privacy and expose only the public projection.
+    - Compute leaderboard rows from eligible published free prompts and validated events with self-action exclusion, fraud controls, time windows, minimum cohort/activity thresholds, and deterministic ranking.
+  timeoutRetry:
+    timeoutSeconds: 900
+    maxAttempts: 2
+    retryOn: [auth-sandbox-timeout, serialization-conflict]
+    neverRetryOn: [credential-leak, horizontal-access, csrf-failure, pii-leak, ranking-integrity-failure]
+  acceptanceTests:
+    - Auth success and failure paths rotate/revoke sessions correctly, resist enumeration and fixation, and never leak credentials or tokens.
+    - Copy, share, favorite, vote, and report obey the authorization matrix and converge under duplicate, retry, race, and abuse conditions.
+    - Favorites and library cannot be read or poisoned across subjects, caches, logout, refund, or entitlement revocation.
+    - Public profiles expose only approved fields and respect privacy, moderation, deletion, and handle-confusability policies.
+    - Leaderboard excludes private/ineligible contributors and raw PII, applies minimum thresholds, and resists replay, self-voting, and linked-account manipulation.
+    - No identity or engagement flow creates a seller, nonzero contributed price, payout, commission, tax-beneficiary, or KYC record.
+    - Preview and production identities, sessions, cookies, callback origins, secrets, databases, and caches are isolated; cookie scope and redirect validation cannot cross environments.
+  rollback:
+    strategy: disable-engagement-and-public-profile-flags-while-preserving-auth-and-ledgers
+    preserve: [account-security-events, favorites, reports, entitlement-history, moderation-audit, ranking-version]
+    verification: Protected library access remains server-authorized and public projections contain no private fields.
+  telemetry:
+    events: [auth.completed, auth.denied, session.revoked, engagement.applied, report.accepted, library.denied, profile.rendered, leaderboard.computed]
+    fields: [taskId, correlationId, routeTemplate, action, reasonCode, rankingVersion, aggregateCount, durationMs, outcome]
+    redact: [credentials, tokens, cookies, sessionIds, emails, ipAddresses, deviceSignals, profileFreeText, reportText, promptContent]

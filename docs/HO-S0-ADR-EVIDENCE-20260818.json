@@ -1,0 +1,490 @@
+{
+  "schemaVersion": "1.0.0",
+  "handoffVersion": 1,
+  "handoffId": "HO-S0-ADR-20260818",
+  "createdAt": "2026-08-18T03:45:29.380Z",
+  "objective": {
+    "summary": "Canonical S0 audit and ADR/evidence handoff for the Prompt Knowledge Network: entry START, G0/G1, requested exit S0_ACCEPTED; S1 is not dispatched.",
+    "businessReason": "Give an independent reviewer a clean-room, evidence-backed current-versus-target record before any production, migration, provider, or application implementation action.",
+    "desiredOutcomes": [
+      "Current repository evidence is separated from the AP-PDN-001 approved target.",
+      "Future data, media, identity, payment, Preview and rollback work has explicit decision and test boundaries.",
+      "The reviewer can issue an independent S0 verdict without relying on templates or self-approval."
+    ]
+  },
+  "scope": {
+    "included": [
+      "S0 clean-room public-outcome observation, repository/contract audit, ADR/evidence package and handoff only.",
+      "K0 data inventory, reconciliation and rollback requirements as documentation only.",
+      "Bounded S1 interface definition without any S1 implementation."
+    ],
+    "excluded": [
+      "Application code, schema, migration, configuration, dependency, provider, database, Blob, deployment, DNS, payment or production mutation.",
+      "Any S1-S7, K1-K6, product-release or S0_ACCEPTED claim.",
+      "Reference source, private API, asset, copy, prompt content or identity retention."
+    ],
+    "assumptions": [
+      "The active product contract v1.4.0 is owner-approved target intent, not implementation evidence.",
+      "Existing dirty/untracked application work is concurrent work and remains outside this S0 write scope.",
+      "S0 requires independent review before any durable acceptance label."
+    ],
+    "constraints": [
+      "Only the Task Contract, S0 ADR/evidence package and this new handoff are task-owned writes.",
+      "All evidence is redacted; no secret, raw PII, protected prompt body or raw media reference is stored.",
+      "Production actions remain explicitly human-approval-gated."
+    ]
+  },
+  "repository": {
+    "root": "E:/aliprompt.vn",
+    "vcs": "git",
+    "branch": "main",
+    "baselineCommit": "944121f3fc8313cf52eaf7f8f9068c5f2591b26a",
+    "headCommit": "944121f3fc8313cf52eaf7f8f9068c5f2591b26a",
+    "workingTree": "dirty",
+    "unrelatedChangesPresent": true,
+    "concurrentEditorsPresent": true
+  },
+  "repoEvidence": [
+    {
+      "id": "E-S0-CONTRACT",
+      "kind": "file",
+      "source": "agent-pack/product/ACTIVE-PRODUCT-CONTRACT.md and agent-pack/sprints/vi/S0-audit-contracts-adrs.prompt.md",
+      "capturedAt": "2026-08-18T03:42:23.733Z",
+      "summary": "Active target is ALIPROMPT-COMMERCE-COMMUNITY-V1 v1.4.0 approved_next. Canonical S0 uses START, G0/G1 and requested S0_ACCEPTED without application mutation.",
+      "redacted": true
+    },
+    {
+      "id": "E-S0-REPO",
+      "kind": "command-output",
+      "source": "git rev-parse, git status, package/schema/route/migration/configuration inventory at 2026-08-18T03:42Z",
+      "capturedAt": "2026-08-18T03:42:23.733Z",
+      "summary": "main is at 944121f and is broadly dirty/untracked. Current worktree contains Next.js, Drizzle/Postgres, Vercel Blob and marketplace routes, but no Vercel, database, Blob or provider binding is available locally.",
+      "redacted": true
+    },
+    {
+      "id": "E-S0-REFERENCE",
+      "kind": "manual-observation",
+      "source": "https://promptvn.com/ visible public UI, read-only observation at 2026-08-18T03:42Z",
+      "capturedAt": "2026-08-18T03:42:23.733Z",
+      "summary": "Observed abstract public outcomes only: navigation/theme, search/categories, ranked rails, cards, author/category discovery, copy/favorite/vote/report, contribution, account entry, leaderboard and blog. No source, asset, copy, prompt body, private API or identity was retained.",
+      "redacted": true
+    },
+    {
+      "id": "E-S0-ADR",
+      "kind": "file",
+      "source": "docs/S0-PROMPT-KNOWLEDGE-NETWORK-ADR-EVIDENCE.md",
+      "capturedAt": "2026-08-18T03:45:29.380Z",
+      "digest": "sha256:1af6e3a66788d0cdbe8544469baf98ec9af442b29f268df162e73fbe79242435",
+      "summary": "Records clean-room boundary, current/target/gap ledger, CAP/COM/PLT map, Next/Vercel, Supabase Postgres/Drizzle, Question aggregates, Blob, identity/payment, observability/backup ADRs, threat model, K0 plan and S1 boundary.",
+      "redacted": true
+    },
+    {
+      "id": "E-S0-LOCAL-CHECKS",
+      "kind": "test-report",
+      "source": "node task-contract validation, npm run ai:validate, npm run lint and npm test at 2026-08-18T03:42Z",
+      "capturedAt": "2026-08-18T03:42:53.714Z",
+      "summary": "Task-contract validation, AI contracts, lint, Drizzle check, production build, 29 Node tests and one TypeScript payment test passed locally; they do not prove live database, Preview, provider, browser E2E or independent review.",
+      "redacted": true
+    },
+    {
+      "id": "E-S0-NO-ACCEPTANCE",
+      "kind": "command-output",
+      "source": "exact acceptance/handoff artifact inspection at 2026-08-18T03:42Z",
+      "capturedAt": "2026-08-18T03:42:23.733Z",
+      "summary": "No independently accepted S0 artifact binding revision, environment, gates, evidence, reviewer, decision and timestamp was found. Existing S0 handoff is partial/pending; template labels are non-evidence.",
+      "redacted": true
+    }
+  ],
+  "ownership": {
+    "currentOwner": {
+      "id": "orchestrator",
+      "role": "S0 technical orchestrator",
+      "responsibility": "Preserve concurrent work, record evidence and stop after the S0 handoff without self-acceptance."
+    },
+    "contributors": [
+      {
+        "id": "product-owner",
+        "role": "Product decision owner",
+        "responsibility": "Resolve S0-reserved outcome and policy values without changing implementation authority."
+      },
+      {
+        "id": "qa-release-reviewer",
+        "role": "Independent reviewer",
+        "responsibility": "Review G0/G1 and issue or refuse the S0 verdict independently."
+      }
+    ],
+    "responsibilityMap": [
+      {
+        "area": "S0 evidence, scope and handoff",
+        "ownerId": "orchestrator"
+      },
+      {
+        "area": "K0 product policy decisions",
+        "ownerId": "product-owner"
+      },
+      {
+        "area": "S0 independent acceptance",
+        "ownerId": "qa-release-reviewer"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "DEC-S0-ONLY",
+      "status": "accepted",
+      "context": "The user directed a single S0 run and the canonical sequence forbids S1 without independent S0 acceptance.",
+      "optionsConsidered": [
+        "Infer S1 from existing source presence.",
+        "Run S0 only, document current gaps, and stop for independent review."
+      ],
+      "choice": "Run S0 only.",
+      "rationale": "No independent S0 acceptance binds the existing dirty worktree or an environment.",
+      "consequences": [
+        "No application code or external state was changed.",
+        "S1 remains unauthorized.",
+        "The next action is independent review, not implementation."
+      ],
+      "ownerId": "orchestrator",
+      "evidenceRefs": [
+        "E-S0-CONTRACT",
+        "E-S0-NO-ACCEPTANCE"
+      ]
+    },
+    {
+      "id": "DEC-S0-PLATFORM-DATA",
+      "status": "proposed",
+      "context": "AP-PLATFORM-001 and AP-PDN-001 require native Vercel, Supabase PostgreSQL through Drizzle, two Blob trust zones and additive legacy migration.",
+      "optionsConsidered": [
+        "Implicit provider feature adoption or destructive legacy replacement.",
+        "Provider-limited PostgreSQL, Drizzle authority, isolated environments and additive reversible migration."
+      ],
+      "choice": "Use the latter as the only future implementation path.",
+      "rationale": "It protects clean-room scope, single-seller authority, data recovery and Preview-to-Production isolation.",
+      "consequences": [
+        "K0 requires a read-only data inventory/reconciliation plan before schema work.",
+        "No raw upload becomes public; no concurrent Drizzle/Supabase migration authority exists.",
+        "Production remains separately approval-gated."
+      ],
+      "ownerId": "platform-product-architect",
+      "evidenceRefs": [
+        "E-S0-ADR",
+        "E-S0-CONTRACT"
+      ]
+    }
+  ],
+  "trustBoundaries": [
+    {
+      "id": "TB-S0-EVIDENCE",
+      "source": "Repository, product documents, public reference and tool output",
+      "destination": "S0 ADR and handoff",
+      "data": [
+        "public capability outcomes",
+        "redacted repository state",
+        "contract decisions",
+        "local test outputs"
+      ],
+      "classification": "mixed",
+      "authentication": "Repository evidence is read locally; public reference is untrusted and read-only; no provider account was accessed.",
+      "authorization": "S0 allows documentation writes only and no external side effect.",
+      "validation": "Templates are distinguished from accepted artifacts; schema validation and independent review are required.",
+      "controls": [
+        "clean-room prohibition",
+        "no secrets or raw PII",
+        "dirty-tree preservation",
+        "no self-acceptance"
+      ],
+      "failureModes": [
+        "reference copying",
+        "target mistaken for current",
+        "concurrent work overwrite",
+        "unauthorized sprint advance"
+      ]
+    },
+    {
+      "id": "TB-S0-FUTURE-RUNTIME",
+      "source": "Member, provider, Blob, database and cron inputs",
+      "destination": "Future server-side command/query layers",
+      "data": [
+        "identity",
+        "knowledge content",
+        "evidence media",
+        "payment events",
+        "operational jobs"
+      ],
+      "classification": "restricted",
+      "authentication": "Future flows require server session, verified provider signature or server-only job secret as applicable.",
+      "authorization": "Future commands require server ownership/RBAC and state checks; contributor authority is zero-price/moderation-only.",
+      "validation": "Future implementation must enforce DTO allowlists, idempotency, malware/type checks, environment binding and audit trails.",
+      "controls": [
+        "private raw/public sanitized store separation",
+        "verified payment ledger",
+        "Preview/Production isolation",
+        "outbox and bounded reconciliation"
+      ],
+      "failureModes": [
+        "PII/protected-body leak",
+        "raw public Blob",
+        "payment replay",
+        "cross-environment access",
+        "moderation bypass"
+      ]
+    }
+  ],
+  "changes": {
+    "changeSetVersion": 1,
+    "summary": "This S0 run adds only an ADR/evidence package and a distinct schema-valid handoff; it does not modify application/runtime behavior.",
+    "files": [
+      {
+        "path": "docs/TASK-S0-K0-PROMPT-KNOWLEDGE-NETWORK.md",
+        "kind": "modified",
+        "ownerId": "orchestrator",
+        "rationale": "Extends the S0 documentation-only path lease for this non-conflicting handoff.",
+        "userImpact": "Keeps the task scope auditable.",
+        "securityImpact": "Prevents application/configuration writes in S0."
+      },
+      {
+        "path": "docs/S0-PROMPT-KNOWLEDGE-NETWORK-ADR-EVIDENCE.md",
+        "kind": "added",
+        "ownerId": "orchestrator",
+        "rationale": "Captures S0 decisions, evidence, risks, acceptance and rollback requirements.",
+        "userImpact": "Makes later work reviewable and reversible.",
+        "securityImpact": "Documents clean-room, privacy, media and payment boundaries."
+      },
+      {
+        "path": "docs/HO-S0-ADR-EVIDENCE-20260818.json",
+        "kind": "added",
+        "ownerId": "orchestrator",
+        "rationale": "Provides a new non-conflicting 19-key independent-review handoff.",
+        "userImpact": "Supplies the next owner with reproducible S0 evidence.",
+        "securityImpact": "Maintains redacted evidence and no-self-acceptance controls."
+      }
+    ],
+    "behaviorChanges": [
+      "No application behavior changed."
+    ],
+    "dataMigrations": [
+      "None; K0 is documentation and read-only inventory planning only."
+    ],
+    "configurationChanges": [
+      "None."
+    ],
+    "dependencyChanges": [
+      "None."
+    ]
+  },
+  "tests": {
+    "executions": [
+      {
+        "id": "T-S0-TASK",
+        "layer": "contract",
+        "commandOrProcedure": "node agent-pack/scripts/validate-task-contract.mjs --all --self-test and direct validation of the S0 Task Contract",
+        "status": "passed",
+        "summary": "Task-contract self-test, existing task contracts and the S0 Task Contract passed.",
+        "evidenceRefs": [
+          "E-S0-LOCAL-CHECKS"
+        ]
+      },
+      {
+        "id": "T-S0-LOCAL",
+        "layer": "integration",
+        "commandOrProcedure": "npm run ai:validate; npm run lint; npm test",
+        "status": "passed",
+        "summary": "Local contracts, lint, Drizzle check, build and 30 automated tests passed.",
+        "evidenceRefs": [
+          "E-S0-LOCAL-CHECKS"
+        ]
+      },
+      {
+        "id": "T-S0-REVIEW",
+        "layer": "manual",
+        "commandOrProcedure": "Independent G0/G1 review against this exact handoff and evidence digest.",
+        "status": "blocked",
+        "summary": "The current orchestrator cannot accept its own S0 evidence.",
+        "evidenceRefs": [
+          "E-S0-NO-ACCEPTANCE"
+        ]
+      }
+    ],
+    "coverageSummary": "S0 documents scope, architecture, test strategy and current local baseline; no live environment or product journey is claimed verified.",
+    "untestedAreas": [
+      "Read-only legacy data inventory, reconciliation and rollback rehearsal",
+      "Vercel Preview environment isolation",
+      "Real PostgreSQL, Blob, email and payment provider integration",
+      "Browser E2E, accessibility, performance and independent G0/G1 review"
+    ]
+  },
+  "acceptance": {
+    "criteriaVersion": "1.0.0",
+    "criteria": [
+      {
+        "id": "S0-SCOPE",
+        "requirement": "S0 uses the canonical START/G0/G1 envelope and makes no application/runtime change.",
+        "status": "passed",
+        "evidenceRefs": [
+          "E-S0-CONTRACT",
+          "E-S0-REPO"
+        ],
+        "notes": "No later sprint was dispatched."
+      },
+      {
+        "id": "S0-ADR",
+        "requirement": "Clean-room, Vercel, PostgreSQL, Blob, data/security, observability and rollback decisions are explicit and evidence-backed.",
+        "status": "passed",
+        "evidenceRefs": [
+          "E-S0-ADR",
+          "E-S0-REFERENCE"
+        ],
+        "notes": "The ADR is a design/evidence record, not deployment or implementation proof."
+      },
+      {
+        "id": "S0-K0-INVENTORY",
+        "requirement": "K0 real-data inventory and reconciliation are available for migration approval.",
+        "status": "blocked",
+        "evidenceRefs": [
+          "E-S0-REPO",
+          "E-S0-ADR"
+        ],
+        "notes": "No approved isolated database or source manifest is available."
+      },
+      {
+        "id": "S0-INDEPENDENT",
+        "requirement": "qa-release-reviewer independently accepts G0/G1 for this revision and evidence set.",
+        "status": "blocked",
+        "evidenceRefs": [
+          "E-S0-NO-ACCEPTANCE"
+        ],
+        "notes": "Independent review has not been issued."
+      }
+    ],
+    "overallStatus": "partial",
+    "blockingCriteria": [
+      "S0-K0-INVENTORY",
+      "S0-INDEPENDENT"
+    ]
+  },
+  "security": {
+    "reviewStatus": "blocked",
+    "threatModelVersion": "1.0.0",
+    "secretScanStatus": "not-run",
+    "personalDataHandling": "Only redacted repository facts, public outcomes and configuration names are documented. No raw PII, secret, reference identity or protected prompt content is retained.",
+    "contentProtection": "Future public DTO, evidence and paid-content protections are specified, but no live environment security validation occurred in S0.",
+    "findings": [
+      {
+        "id": "SEC-S0-CONCURRENT-OWNERSHIP",
+        "severity": "medium",
+        "status": "open",
+        "description": "The broad dirty worktree and missing ownership manifests prevent attribution or safe overlapping implementation writes.",
+        "affectedAssets": [
+          "repository worktree",
+          "future evidence provenance"
+        ],
+        "mitigation": "Preserve current paths and require a fresh baseline and explicit lease before any later write.",
+        "ownerId": "orchestrator",
+        "evidenceRefs": [
+          "E-S0-REPO"
+        ]
+      }
+    ],
+    "knownLimitations": [
+      "No source/bundle secret scan, live security test, provider audit, Preview deployment or independent security review ran in S0.",
+      "Blob store separation and environment isolation are target requirements, not current runtime receipts."
+    ]
+  },
+  "risks": [
+    {
+      "id": "R-S0-DIRTY",
+      "description": "Concurrent dirty work could be overwritten or misattributed in a future task.",
+      "likelihood": "likely",
+      "impact": "major",
+      "severity": "high",
+      "mitigation": "Use an explicit future file lease and exact baseline before any implementation.",
+      "trigger": "A task proposes overlap with existing paths without owner handoff.",
+      "ownerId": "orchestrator",
+      "status": "open"
+    },
+    {
+      "id": "R-S0-DATA",
+      "description": "Legacy row/file/identity/PII distributions and migration compatibility are unknown.",
+      "likelihood": "almost-certain",
+      "impact": "major",
+      "severity": "high",
+      "mitigation": "Run an approved read-only K0 inventory and reconciliation plan before schema or backfill work.",
+      "trigger": "Any request for migration, cutover or data mutation.",
+      "ownerId": "domain-data-engineer",
+      "status": "open"
+    },
+    {
+      "id": "R-S0-REVIEW",
+      "description": "No independent G0/G1 verdict exists for this evidence set.",
+      "likelihood": "almost-certain",
+      "impact": "major",
+      "severity": "high",
+      "mitigation": "Require qa-release-reviewer assessment; do not start S1 beforehand.",
+      "trigger": "Any request to issue S0_ACCEPTED or start S1.",
+      "ownerId": "qa-release-reviewer",
+      "status": "open"
+    }
+  ],
+  "rollback": {
+    "supported": true,
+    "ownerId": "orchestrator",
+    "strategy": "Documentation-only rollback: remove only the three task-owned S0 files under an explicit owner instruction; leave all existing dirty work untouched.",
+    "prerequisites": [
+      "Confirm the task-owned paths and user direction.",
+      "Record current repository status before the scoped documentation rollback."
+    ],
+    "steps": [
+      "Do not reset, checkout, clean or modify application/runtime paths.",
+      "Remove only the Task Contract, ADR/evidence package and this new handoff if directed.",
+      "Revalidate remaining documentation and record the final status."
+    ],
+    "dataRecovery": "No data, deployment, provider or migration action occurred.",
+    "validation": [
+      "Confirm no application/schema/configuration path was changed by S0.",
+      "Confirm pre-existing dirty paths remain preserved."
+    ],
+    "irreversibleItems": [],
+    "estimatedMinutes": 5
+  },
+  "nextOwner": {
+    "owner": {
+      "id": "qa-release-reviewer",
+      "role": "Independent S0 reviewer",
+      "responsibility": "Validate the exact S0 evidence and issue a non-self-approved G0/G1 verdict without starting S1."
+    },
+    "requestedActions": [
+      "Validate this handoff and the ADR digest against the exact dirty-tree baseline.",
+      "Challenge clean-room, product-boundary, data-migration, security/privacy and rollback claims.",
+      "Keep S0 partial/blocked unless K0 inventory and all required independent evidence are actually available."
+    ],
+    "dependencies": [
+      "Read-only isolated data inventory and reconciliation evidence if S0 acceptance requires it.",
+      "Human owner decisions for unresolved WVSA, moderation, reputation, retention and policy values."
+    ],
+    "blockingQuestions": [
+      "Which approved isolated source supplies K0 data inventory and reconciliation evidence?",
+      "Who owns the existing dirty paths for future file leases?",
+      "Which unresolved owner decisions are required before S0 can be accepted?"
+    ],
+    "approvalRequired": true
+  },
+  "approvals": [
+    {
+      "id": "APR-S0-QA-ADR",
+      "approverId": "qa-release-reviewer",
+      "role": "Independent G0/G1 reviewer",
+      "scope": "This S0 ADR/evidence handoff only; no later sprint, deployment, provider or production authorization.",
+      "decision": "pending",
+      "conditions": [
+        "Validate the 19-key schema and evidence digest.",
+        "Verify documentation-only diff and concurrent-work preservation.",
+        "Do not treat local checks as Preview, provider or release evidence."
+      ],
+      "evidenceRefs": [
+        "E-S0-ADR",
+        "E-S0-LOCAL-CHECKS",
+        "E-S0-NO-ACCEPTANCE"
+      ]
+    }
+  ]
+}

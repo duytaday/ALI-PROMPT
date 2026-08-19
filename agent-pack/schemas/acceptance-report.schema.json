@@ -1,0 +1,1062 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aliprompt.local/agent-pack/acceptance-report/1.0.0",
+  "title": "Agent Work Acceptance Report",
+  "description": "A strict decision record that verifies a handoff against acceptance, security, repository-safety, and release gates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "reportVersion",
+    "reportId",
+    "generatedAt",
+    "handoff",
+    "repository",
+    "ownership",
+    "repoEvidence",
+    "decisions",
+    "trustBoundaries",
+    "changes",
+    "tests",
+    "acceptance",
+    "security",
+    "risks",
+    "rollback",
+    "nextOwner",
+    "approval",
+    "verdict"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "reportVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reportId": {
+      "type": "string",
+      "pattern": "^AR-[A-Za-z0-9][A-Za-z0-9._-]{2,63}$"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "handoff": {
+      "$ref": "#/$defs/handoffReference"
+    },
+    "repository": {
+      "$ref": "#/$defs/repositorySnapshot"
+    },
+    "ownership": {
+      "$ref": "#/$defs/ownershipReview"
+    },
+    "repoEvidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/decisionReview"
+      }
+    },
+    "trustBoundaries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/trustBoundaryReview"
+      }
+    },
+    "changes": {
+      "$ref": "#/$defs/changeReview"
+    },
+    "tests": {
+      "$ref": "#/$defs/testReview"
+    },
+    "acceptance": {
+      "$ref": "#/$defs/acceptanceReview"
+    },
+    "security": {
+      "$ref": "#/$defs/securityReview"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/riskReview"
+      }
+    },
+    "rollback": {
+      "$ref": "#/$defs/rollbackReview"
+    },
+    "nextOwner": {
+      "$ref": "#/$defs/nextOwner"
+    },
+    "approval": {
+      "$ref": "#/$defs/finalApproval"
+    },
+    "verdict": {
+      "enum": [
+        "accepted",
+        "accepted-with-conditions",
+        "rejected",
+        "blocked"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "accepted"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "$ref": "#/$defs/approvedFinalApproval"
+          },
+          "acceptance": {
+            "$ref": "#/$defs/passedAcceptanceReview"
+          },
+          "security": {
+            "$ref": "#/$defs/passedSecurityReview"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "accepted-with-conditions"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "$ref": "#/$defs/approvedWithConditionsFinalApproval"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]{1,63}$"
+    },
+    "agentId": {
+      "enum": [
+        "orchestrator",
+        "product-owner",
+        "cleanroom-reference-analyst",
+        "platform-product-architect",
+        "domain-data-engineer",
+        "frontend-ux-engineer",
+        "commerce-security-engineer",
+        "catalog-seo-trust-engineer",
+        "qa-release-reviewer"
+      ]
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "not": {
+        "pattern": "(^|[/\\\\])\\.\\.([/\\\\]|$)"
+      }
+    },
+    "stringList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      }
+    },
+    "handoffReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handoffId",
+        "schemaVersion",
+        "handoffVersion",
+        "digest"
+      ],
+      "properties": {
+        "handoffId": {
+          "type": "string",
+          "pattern": "^HO-[A-Za-z0-9][A-Za-z0-9._-]{2,63}$"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "handoffVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^(sha256:)?[0-9a-fA-F]{64}$"
+        }
+      }
+    },
+    "repositorySnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "branch",
+        "baselineCommit",
+        "reviewedCommit",
+        "workingTree",
+        "unrelatedChangesPreserved",
+        "concurrentEditCheck",
+        "matchesHandoff"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/path"
+        },
+        "branch": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "baselineCommit": {
+          "type": "string",
+          "pattern": "^([0-9a-fA-F]{7,64}|unborn|not-applicable)$"
+        },
+        "reviewedCommit": {
+          "type": "string",
+          "pattern": "^([0-9a-fA-F]{7,64}|unborn|not-applicable)$"
+        },
+        "workingTree": {
+          "enum": [
+            "clean",
+            "dirty",
+            "unknown"
+          ]
+        },
+        "unrelatedChangesPreserved": {
+          "enum": [
+            "yes",
+            "no",
+            "not-applicable",
+            "unknown"
+          ]
+        },
+        "concurrentEditCheck": {
+          "enum": [
+            "passed",
+            "failed",
+            "not-applicable",
+            "unknown"
+          ]
+        },
+        "matchesHandoff": {
+          "type": "boolean"
+        }
+      }
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "role"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/agentId"
+        },
+        "role": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "ownershipReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewer",
+        "implementer",
+        "separationOfDuties",
+        "unownedAreas"
+      ],
+      "properties": {
+        "reviewer": {
+          "$ref": "#/$defs/owner"
+        },
+        "implementer": {
+          "$ref": "#/$defs/owner"
+        },
+        "separationOfDuties": {
+          "enum": [
+            "satisfied",
+            "waived",
+            "not-required",
+            "violated"
+          ]
+        },
+        "unownedAreas": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "source",
+        "capturedAt",
+        "digest",
+        "summary",
+        "redacted",
+        "verified"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "command-output",
+            "file",
+            "diff",
+            "test-report",
+            "security-report",
+            "screenshot",
+            "log",
+            "url",
+            "manual-observation"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "capturedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^(sha256:)?[0-9a-fA-F]{64}$"
+        },
+        "summary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "redacted": {
+          "type": "boolean"
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "decisionReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decisionId",
+        "status",
+        "rationaleAdequate",
+        "alternativesAdequate",
+        "consequencesCovered",
+        "evidenceRefs",
+        "notes"
+      ],
+      "properties": {
+        "decisionId": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "enum": [
+            "accepted",
+            "changes-requested",
+            "rejected",
+            "not-applicable"
+          ]
+        },
+        "rationaleAdequate": {
+          "type": "boolean"
+        },
+        "alternativesAdequate": {
+          "type": "boolean"
+        },
+        "consequencesCovered": {
+          "type": "boolean"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "trustBoundaryReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boundaryId",
+        "authenticationVerified",
+        "authorizationVerified",
+        "inputValidationVerified",
+        "failureModeTests",
+        "residualExposure",
+        "evidenceRefs",
+        "status"
+      ],
+      "properties": {
+        "boundaryId": {
+          "$ref": "#/$defs/id"
+        },
+        "authenticationVerified": {
+          "type": "boolean"
+        },
+        "authorizationVerified": {
+          "type": "boolean"
+        },
+        "inputValidationVerified": {
+          "type": "boolean"
+        },
+        "failureModeTests": {
+          "$ref": "#/$defs/stringList"
+        },
+        "residualExposure": {
+          "$ref": "#/$defs/stringList"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "partial"
+          ]
+        }
+      }
+    },
+    "reviewedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "declaredChange",
+        "reviewed",
+        "matchesIntent",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "declaredChange": {
+          "enum": [
+            "added",
+            "modified",
+            "deleted",
+            "renamed",
+            "generated"
+          ]
+        },
+        "reviewed": {
+          "type": "boolean"
+        },
+        "matchesIntent": {
+          "type": "boolean"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "changeReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "changeSetVersion",
+        "files",
+        "undeclaredChanges",
+        "migrationStatus",
+        "configurationStatus",
+        "dependencyStatus",
+        "status"
+      ],
+      "properties": {
+        "changeSetVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reviewedFile"
+          }
+        },
+        "undeclaredChanges": {
+          "$ref": "#/$defs/stringList"
+        },
+        "migrationStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-applicable"
+          ]
+        },
+        "configurationStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-applicable"
+          ]
+        },
+        "dependencyStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-applicable"
+          ]
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "partial"
+          ]
+        }
+      }
+    },
+    "testResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "testId",
+        "layer",
+        "status",
+        "reproduced",
+        "evidenceRefs",
+        "notes"
+      ],
+      "properties": {
+        "testId": {
+          "$ref": "#/$defs/id"
+        },
+        "layer": {
+          "enum": [
+            "static",
+            "unit",
+            "integration",
+            "contract",
+            "end-to-end",
+            "security",
+            "accessibility",
+            "performance",
+            "manual"
+          ]
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-run"
+          ]
+        },
+        "reproduced": {
+          "type": "boolean"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "testReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "results",
+        "requiredLayers",
+        "missingCoverage",
+        "flakyTests",
+        "overallStatus"
+      ],
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/testResult"
+          }
+        },
+        "requiredLayers": {
+          "$ref": "#/$defs/stringList"
+        },
+        "missingCoverage": {
+          "$ref": "#/$defs/stringList"
+        },
+        "flakyTests": {
+          "$ref": "#/$defs/stringList"
+        },
+        "overallStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "partial"
+          ]
+        }
+      }
+    },
+    "criterionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criterionId",
+        "status",
+        "evidenceRefs",
+        "notes"
+      ],
+      "properties": {
+        "criterionId": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-run",
+            "not-applicable"
+          ]
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "acceptanceReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criteriaVersion",
+        "results",
+        "failedCriteria",
+        "blockedCriteria",
+        "overallStatus"
+      ],
+      "properties": {
+        "criteriaVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/criterionResult"
+          }
+        },
+        "failedCriteria": {
+          "$ref": "#/$defs/stringList"
+        },
+        "blockedCriteria": {
+          "$ref": "#/$defs/stringList"
+        },
+        "overallStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "partial"
+          ]
+        }
+      }
+    },
+    "passedAcceptanceReview": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/acceptanceReview"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "criteriaVersion": true,
+            "results": true,
+            "failedCriteria": true,
+            "blockedCriteria": true,
+            "overallStatus": {
+              "const": "passed"
+            }
+          }
+        }
+      ]
+    },
+    "findingReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "findingId",
+        "severity",
+        "disposition",
+        "ownerId",
+        "evidenceRefs",
+        "notes"
+      ],
+      "properties": {
+        "findingId": {
+          "$ref": "#/$defs/id"
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low",
+            "informational"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "fixed",
+            "risk-accepted",
+            "false-positive",
+            "open"
+          ]
+        },
+        "ownerId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "securityReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "threatModelVersion",
+        "secretScanStatus",
+        "dependencyScanStatus",
+        "authorizationStatus",
+        "webhookStatus",
+        "contentProtectionStatus",
+        "abuseControlStatus",
+        "findings",
+        "openCriticalOrHigh",
+        "overallStatus"
+      ],
+      "properties": {
+        "threatModelVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "secretScanStatus": {
+          "$ref": "#/$defs/gateStatus"
+        },
+        "dependencyScanStatus": {
+          "$ref": "#/$defs/gateStatus"
+        },
+        "authorizationStatus": {
+          "$ref": "#/$defs/gateStatus"
+        },
+        "webhookStatus": {
+          "$ref": "#/$defs/gateStatus"
+        },
+        "contentProtectionStatus": {
+          "$ref": "#/$defs/gateStatus"
+        },
+        "abuseControlStatus": {
+          "$ref": "#/$defs/gateStatus"
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/findingReview"
+          }
+        },
+        "openCriticalOrHigh": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "overallStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "partial"
+          ]
+        }
+      }
+    },
+    "passedSecurityReview": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/securityReview"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "threatModelVersion": true,
+            "secretScanStatus": true,
+            "dependencyScanStatus": true,
+            "authorizationStatus": true,
+            "webhookStatus": true,
+            "contentProtectionStatus": true,
+            "abuseControlStatus": true,
+            "findings": true,
+            "openCriticalOrHigh": true,
+            "overallStatus": {
+              "const": "passed"
+            }
+          }
+        }
+      ]
+    },
+    "gateStatus": {
+      "enum": [
+        "passed",
+        "failed",
+        "blocked",
+        "not-run",
+        "not-applicable"
+      ]
+    },
+    "riskReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "riskId",
+        "severity",
+        "disposition",
+        "mitigationVerified",
+        "ownerId",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "riskId": {
+          "$ref": "#/$defs/id"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "closed",
+            "mitigated",
+            "accepted",
+            "open"
+          ]
+        },
+        "mitigationVerified": {
+          "type": "boolean"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "rollbackReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "supported",
+        "procedureVerified",
+        "dataRecoveryVerified",
+        "validationVerified",
+        "irreversibleItemsAccepted",
+        "ownerId",
+        "evidenceRefs",
+        "status"
+      ],
+      "properties": {
+        "supported": {
+          "type": "boolean"
+        },
+        "procedureVerified": {
+          "type": "boolean"
+        },
+        "dataRecoveryVerified": {
+          "type": "boolean"
+        },
+        "validationVerified": {
+          "type": "boolean"
+        },
+        "irreversibleItemsAccepted": {
+          "type": "boolean"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-applicable"
+          ]
+        }
+      }
+    },
+    "nextOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "acceptedHandoff",
+        "requiredActions",
+        "blockingQuestions"
+      ],
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/owner"
+        },
+        "acceptedHandoff": {
+          "type": "boolean"
+        },
+        "requiredActions": {
+          "$ref": "#/$defs/stringList"
+        },
+        "blockingQuestions": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "finalApproval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approver",
+        "decision",
+        "scope",
+        "conditions",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "approver": {
+          "$ref": "#/$defs/owner"
+        },
+        "decision": {
+          "enum": [
+            "approved",
+            "approved-with-conditions",
+            "rejected",
+            "pending"
+          ]
+        },
+        "scope": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "conditions": {
+          "$ref": "#/$defs/stringList"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "decidedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "approvedFinalApproval": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/finalApproval"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "approver": true,
+            "decision": {
+              "const": "approved"
+            },
+            "scope": true,
+            "conditions": {
+              "type": "array",
+              "maxItems": 0
+            },
+            "evidenceRefs": true,
+            "decidedAt": true
+          }
+        }
+      ]
+    },
+    "approvedWithConditionsFinalApproval": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/finalApproval"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "approver": true,
+            "decision": {
+              "const": "approved-with-conditions"
+            },
+            "scope": true,
+            "conditions": {
+              "type": "array",
+              "minItems": 1
+            },
+            "evidenceRefs": true,
+            "decidedAt": true
+          }
+        }
+      ]
+    }
+  }
+}

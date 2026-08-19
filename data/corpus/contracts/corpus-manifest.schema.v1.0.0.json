@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/contracts/data10k/corpus-manifest.schema.v1.0.0.json",
+  "title": "ALIPROMPT DATA10K immutable run manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestSchemaVersion", "recordSchemaVersion", "taxonomyVersion", "rubricVersion", "reasonCodeVersion", "programId", "runId", "environment", "createdAt", "state", "countingRule", "counts", "categoryDistribution", "localeCoverage", "artifactHashes", "approvalState"],
+  "properties": {
+    "manifestSchemaVersion": {"const": "1.0.0"},
+    "recordSchemaVersion": {"const": "1.0.0"},
+    "taxonomyVersion": {"const": "1.0.0"},
+    "rubricVersion": {"const": "1.0.0"},
+    "reasonCodeVersion": {"const": "1.0.0"},
+    "programId": {"const": "DATA10K"},
+    "runId": {"type": "string", "pattern": "^data10k-[a-z0-9][a-z0-9-]{2,63}$"},
+    "environment": {"enum": ["local", "isolated_preview"]},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "state": {"enum": ["planned", "generating", "validating", "frozen", "importing_preview", "reconciled_preview", "rolled_back", "failed"]},
+    "countingRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "target", "localizationsRequired", "localizationRowsCountTowardTarget"],
+      "properties": {
+        "unit": {"const": "distinct_accepted_prompt_key"},
+        "target": {"const": 10000},
+        "localizationsRequired": {"const": 2},
+        "localizationRowsCountTowardTarget": {"const": false}
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rawGenerated", "canonicalCandidates", "acceptedCanonical", "rejectedCanonical", "duplicateCanonical", "safetyHeldCanonical", "localizationRows", "placeholderCovers", "generatedDemos", "importedCanonical", "reconciledCanonical"],
+      "properties": {
+        "rawGenerated": {"type": "integer", "minimum": 0},
+        "canonicalCandidates": {"type": "integer", "minimum": 0},
+        "acceptedCanonical": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "rejectedCanonical": {"type": "integer", "minimum": 0},
+        "duplicateCanonical": {"type": "integer", "minimum": 0},
+        "safetyHeldCanonical": {"type": "integer", "minimum": 0},
+        "localizationRows": {"type": "integer", "minimum": 0},
+        "placeholderCovers": {"type": "integer", "minimum": 0},
+        "generatedDemos": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "importedCanonical": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "reconciledCanonical": {"type": "integer", "minimum": 0, "maximum": 10000}
+      }
+    },
+    "categoryDistribution": {
+      "type": "array",
+      "minItems": 25,
+      "maxItems": 25,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["categorySlug", "canonicalQuota", "candidateCount", "acceptedCount", "rejectedCount", "heldCount"],
+        "properties": {
+          "categorySlug": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "canonicalQuota": {"const": 400},
+          "candidateCount": {"type": "integer", "minimum": 0},
+          "acceptedCount": {"type": "integer", "minimum": 0, "maximum": 400},
+          "rejectedCount": {"type": "integer", "minimum": 0},
+          "heldCount": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "localeCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["viAccepted", "enAccepted", "missingLocaleCount"],
+      "properties": {
+        "viAccepted": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "enAccepted": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "missingLocaleCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "artifactHashes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["relativePath", "sha256", "bytes", "recordCount"],
+        "properties": {
+          "relativePath": {"type": "string", "minLength": 3, "maxLength": 512},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "bytes": {"type": "integer", "minimum": 1},
+          "recordCount": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "approvalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currentGate", "exactApproval", "productionAuthorized"],
+      "properties": {
+        "currentGate": {"enum": ["G0", "G1", "G2", "G3", "G4"]},
+        "exactApproval": {"type": ["string", "null"], "enum": [null, "DATA10K_G0_APPROVED", "DATA10K_PILOT_APPROVED", "DATA10K_1K_APPROVED", "DATA10K_PREVIEW_ACCEPTED"]},
+        "productionAuthorized": {"const": false}
+      }
+    }
+  }
+}

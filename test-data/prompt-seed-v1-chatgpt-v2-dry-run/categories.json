@@ -1,0 +1,52 @@
+[
+  {
+    "id": "social-media-short-video",
+    "name_vi": "Mạng xã hội và video ngắn",
+    "name_en": "Social Media & Short Video"
+  },
+  {
+    "id": "marketing-branding-aeo",
+    "name_vi": "Marketing, thương hiệu và AEO",
+    "name_en": "Marketing, Branding & AEO"
+  },
+  {
+    "id": "ecommerce-product-visuals",
+    "name_vi": "Thương mại điện tử và hình ảnh sản phẩm",
+    "name_en": "Ecommerce & Product Visuals"
+  },
+  {
+    "id": "visual-design-ai-art",
+    "name_vi": "Thiết kế thị giác và AI art",
+    "name_en": "Visual Design & AI Art"
+  },
+  {
+    "id": "business-startup-ai-agents",
+    "name_vi": "Kinh doanh, startup và AI agents",
+    "name_en": "Business, Startup & AI Agents"
+  },
+  {
+    "id": "education-learning",
+    "name_vi": "Giáo dục và học tập",
+    "name_en": "Education & Learning"
+  },
+  {
+    "id": "technology-saas-coding",
+    "name_vi": "Công nghệ, SaaS và lập trình",
+    "name_en": "Technology, SaaS & Coding"
+  },
+  {
+    "id": "career-personal-branding",
+    "name_vi": "Sự nghiệp và thương hiệu cá nhân",
+    "name_en": "Career & Personal Branding"
+  },
+  {
+    "id": "architecture-interior-real-estate",
+    "name_vi": "Kiến trúc, nội thất và bất động sản",
+    "name_en": "Architecture, Interior & Real Estate"
+  },
+  {
+    "id": "food-travel-wellness-lifestyle",
+    "name_vi": "Ẩm thực, du lịch, wellness và lifestyle",
+    "name_en": "Food, Travel, Wellness & Lifestyle"
+  }
+]

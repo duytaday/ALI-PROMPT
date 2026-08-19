@@ -1,107 +1,40 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
 
-let leadStorageReady: Promise<void> | undefined;
+let client: postgres.Sql | undefined;
 
-const LEGACY_LAST_SUBMITTED_AT = "1970-01-01 00:00:00";
+/**
+ * Keep each warm serverless instance within a small, predictable connection
+ * budget. POSTGRES_URL must point at the Supabase transaction pooler for
+ * request traffic; migrations use POSTGRES_MIGRATION_URL separately.
+ */
+export const RUNTIME_DATABASE_OPTIONS = {
+  max: 1,
+  prepare: false,
+  connect_timeout: 5,
+  idle_timeout: 20,
+} as const;
 
-function getD1() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
+export function hasDatabaseUrl() {
+  return Boolean(process.env.POSTGRES_URL?.trim());
+}
+
+function databaseUrl() {
+  const value = process.env.POSTGRES_URL?.trim();
+  if (!value) {
+    throw new Error("POSTGRES_URL is required for database-backed ALIPROMPT routes.");
   }
-
-  return env.DB;
+  return value;
 }
 
 export function getDb() {
-  return drizzle(getD1(), { schema });
+  client ??= postgres(databaseUrl(), RUNTIME_DATABASE_OPTIONS);
+  return drizzle(client, { schema });
 }
 
-export async function ensureLeadStorage() {
-  if (!leadStorageReady) {
-    const d1 = getD1();
-    leadStorageReady = d1
-      .batch([
-        d1.prepare(`CREATE TABLE IF NOT EXISTS leads (
-          id TEXT PRIMARY KEY NOT NULL,
-          name TEXT NOT NULL,
-          contact TEXT NOT NULL,
-          role_or_industry TEXT NOT NULL,
-          stage_or_intent TEXT NOT NULL,
-          source TEXT NOT NULL,
-          consent INTEGER NOT NULL,
-          created_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          submission_count INTEGER DEFAULT 1 NOT NULL,
-          last_submitted_at TEXT DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          CONSTRAINT leads_stage_allowed CHECK(stage_or_intent IN ('workshop', 'agent_waitlist', 'prompt_pack')),
-          CONSTRAINT leads_consent_required CHECK(consent = 1)
-        )`),
-        d1.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_contact_stage
-          ON leads(contact, stage_or_intent)`),
-        d1.prepare("PRAGMA optimize"),
-      ])
-      .then(async () => {
-        const columnInfo = await d1
-          .prepare("PRAGMA table_info(leads)")
-          .all<{ name: string }>();
-        const columnNames = new Set(
-          columnInfo.results.map((column) => column.name),
-        );
-        const upgrades = [];
-        const requiredColumns: string[] = [];
-
-        if (!columnNames.has("submission_count")) {
-          requiredColumns.push("submission_count");
-          upgrades.push(
-            d1.prepare(
-              "ALTER TABLE leads ADD COLUMN submission_count INTEGER DEFAULT 1 NOT NULL",
-            ),
-          );
-        }
-
-        if (!columnNames.has("last_submitted_at")) {
-          requiredColumns.push("last_submitted_at");
-          upgrades.push(
-            d1.prepare(
-              `ALTER TABLE leads ADD COLUMN last_submitted_at TEXT DEFAULT '${LEGACY_LAST_SUBMITTED_AT}' NOT NULL`,
-            ),
-          );
-        }
-
-        if (upgrades.length > 0) {
-          try {
-            await d1.batch(upgrades);
-          } catch (error) {
-            const refreshedInfo = await d1
-              .prepare("PRAGMA table_info(leads)")
-              .all<{ name: string }>();
-            const refreshedNames = new Set(
-              refreshedInfo.results.map((column) => column.name),
-            );
-
-            if (requiredColumns.some((column) => !refreshedNames.has(column))) {
-              throw error;
-            }
-          }
-        }
-
-        if (!columnNames.has("last_submitted_at")) {
-          await d1
-            .prepare(
-              "UPDATE leads SET last_submitted_at = created_at WHERE last_submitted_at = ?",
-            )
-            .bind(LEGACY_LAST_SUBMITTED_AT)
-            .run();
-        }
-      })
-      .catch((error) => {
-        leadStorageReady = undefined;
-        throw error;
-      });
-  }
-
-  await leadStorageReady;
+export async function closeDatabase() {
+  const activeClient = client;
+  client = undefined;
+  if (activeClient) await activeClient.end({ timeout: 5 });
 }

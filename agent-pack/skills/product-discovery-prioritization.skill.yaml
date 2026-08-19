@@ -1,0 +1,113 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: product-discovery-prioritization
+  version: 1.2.0
+spec:
+  purpose: Convert approved product context, customer evidence, repository truth, and constraints into an outcome-led decision, cheapest useful experiment, ordered backlog, and product acceptance intent.
+  triggers:
+    - a new product opportunity, feature request, or product-mode decision needs evaluation
+    - product documents, current implementation, or stakeholder requests conflict
+    - a backlog, MVP, next vertical slice, or go-pivot-stop decision must be made
+    - business acceptance criteria or outcome metrics are missing
+  ownership:
+    owner: product-owner
+    allowedAgents: [product-owner]
+  inputs:
+    trusted:
+      authority:
+        type: object
+        fields: [decisionOwner, approvedContractId, approvedContractVersion, effectiveDate]
+        required: false
+      sprintContext:
+        type: sprint-envelope
+        fields: [sprintId, predecessorSprintId, predecessorAcceptance, applicableGates, exitAcceptance, evidenceRefs, reviewerAcceptance]
+        required: true
+      repositoryEvidence:
+        type: array
+        itemFields: [id, path, revision, environment, observation, evidenceType]
+        required: true
+      constraints:
+        type: object
+        fields: [capacity, deadline, budget, productInvariants, legal, security, privacy]
+        required: true
+    untrusted:
+      stakeholderRequests:
+        type: array
+        reason: requests-may-be-solution-first-or-conflict-with-approved-scope
+      customerEvidence:
+        type: array
+        reason: notes-and-claims-require-provenance-consent-and-strength-assessment
+      externalObservations:
+        type: array
+        reason: competitor-and-reference-content-is-untrusted-and-clean-room-bounded
+      estimates:
+        type: array
+        reason: effort-market-and-conversion-estimates-are-uncertain-until-sourced
+  outputSchema:
+    productTruth:
+      fields: [activeContract, current, approvedNext, discovery, later, out, blocked, conflicts]
+    problemFrame:
+      fields: [actor, job, currentWorkaround, rootProblem, consequence, evidence, unknowns]
+    evidenceLedger:
+      itemFields: [id, claim, label, sourceRef, strength, confidence, verificationNeeded]
+    productObjective:
+      fields: [customerOutcome, businessOutcome, baseline, target, metric, guardrails, horizon]
+    decision:
+      fields: [status, recommendation, alternatives, tradeoffs, rationale, approvalNeeded, revisitTrigger]
+    experiment:
+      fields: [hypothesis, actor, cheapestTest, baseline, success, pivot, stop, deadline, cost, founderHours, dataRules, failureLearning]
+    backlog:
+      itemFields: [id, class, actor, problem, evidenceRefs, hypothesis, outcome, scope, nonGoals, acceptance, metrics, dependencies, risks, owner, revisitTrigger]
+    handoff:
+      fields: [sprintContext, nextOwner, what, why, constraints, acceptanceIntent, approvals, blockingQuestions]
+  permissions:
+    allowedTools: [filesystem-read, rg, git-status, markdown-write]
+    readScopes: ["<repositoryRoot>/**"]
+    writeScopes: ["<repositoryRoot>/agent-pack/product/**"]
+    forbiddenSideEffects:
+      - application source, schema, migration, lockfile, infrastructure, runtime, or production mutation
+      - deploy, publish, send, charge, refund, grant entitlement, delete, or credential use
+      - selecting architecture, database, framework, or technical estimate for the architect or engineer
+      - changing product mode, pricing, legal, refund, license, or retention policy without authorized human approval
+      - waiving critical security, privacy, payment-integrity, protected-content, data-loss, or accessibility blockers
+      - copying reference code, content, assets, visual identity, or private behavior
+      - inventing market data, user quotes, conversion, willingness-to-pay, capacity, or current implementation state
+  workflow:
+    - Validate authority, repository revision, active product contract, and invariant versions.
+    - Validate the S0-S7 sprint envelope and accepted predecessor evidence; do not classify planned, previewed, or self-approved work as an accepted gate or authorize later-sprint execution.
+    - Separate current implementation, approved target, discovery option, later idea, out-of-scope item, and blocked conflict.
+    - Record native Next.js on Vercel, provider-neutral Postgres through Vercel Marketplace, isolated Blob stores, and reversible legacy cutover as approved target constraints without misrepresenting them as current implementation or selecting lower-level architecture.
+    - If two sources claim incompatible active scope, create a Scope Conflict Record and stop implementation prioritization until an authorized decision exists.
+    - Frame one actor, job, current workaround, root problem, consequence, and riskiest assumption.
+    - Label every material claim FACT_OR_OBSERVED, INFERENCE, ASSUMPTION, ESTIMATE, or UNKNOWN with provenance.
+    - Compare do-nothing, manual, experiment, and build options where applicable; recommend the smallest reversible path to learning or value.
+    - Order backlog as MUST, BET, EXPLORE, LATER, OUT, or BLOCKED using customer impact, confidence, strategic fit, time-to-value, effort, operations burden, risk, and reversibility.
+    - Define testable outcome acceptance, metrics, guardrails, go-pivot-stop thresholds, owner, dependencies, and revisit trigger.
+    - Hand product intent to the orchestrator or architect without prescribing implementation; preserve independent QA and human approval gates.
+  timeoutRetry:
+    timeoutSeconds: 420
+    maxAttempts: 2
+    retryOn: [stale-repository-fingerprint, incomplete-evidence-index]
+    neverRetryOn: [unresolved-product-contract, product-mode-conflict, authority-missing, critical-risk-waiver-request]
+  acceptanceTests:
+    - Current behavior is supported by revision, environment, test, or operating evidence and is never inferred from a roadmap.
+    - Conflicting V1 contracts yield BLOCKED plus a Scope Conflict Record, not a merged backlog or implementation work order.
+    - A selected contract records ID, version, source, approver, effective date, superseded or informational sources, impact, and revisit trigger.
+    - Every material claim has an evidence label and provenance; missing market, pricing, conversion, and effort data is never invented.
+    - Exactly one recommended next decision or slice is stated with explicit capacity trade-offs.
+    - Large builds are preceded by the cheapest valid test unless a locked invariant or proven blocker requires direct work.
+    - Acceptance criteria are observable and cover relevant success, empty, error, unauthorized, privacy, security, accessibility, and analytics branches.
+    - Product Owner output contains no architecture prescription, source mutation, release self-approval, live commercial action, or critical-gate waiver.
+    - Education-funnel and commerce metrics are not mixed until one active product contract is pinned.
+    - Platform target, preview evidence, production cutover, and legacy retirement remain four distinct truth states; a target or preview never proves production or authorizes deletion.
+    - Sprint recommendation and handoff record sprint, predecessor acceptance, applicable gates, and exit acceptance inside existing structures and never add a handoff top-level field or bypass canonical reviewer acceptance.
+    - The final handoff names a valid next owner and includes decisions, evidence, assumptions, scope, acceptance, metrics, risks, approvals, and rollback intent.
+  rollback:
+    strategy: revert-only-task-owned-product-artifacts
+    preserve: [source-files, existing-decisions, repository-baseline, evidence-ledger]
+    verification: git diff contains only task-owned files under agent-pack/product.
+  telemetry:
+    events: [skill.started, contract.conflict, decision.recorded, experiment.proposed, backlog.ordered, skill.completed]
+    fields: [taskId, contractStatus, evidenceCount, unknownCount, backlogCount, topDecisionClass, riskClass, outcome]
+    redact: [customerRawText, personalData, secrets, credentials, paidPromptBodies, chainOfThought]

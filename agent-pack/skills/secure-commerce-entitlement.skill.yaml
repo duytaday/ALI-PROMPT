@@ -1,0 +1,74 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: secure-commerce-entitlement
+  version: 1.2.0
+spec:
+  purpose: Implement ALIPROMPT-only server-authoritative checkout, signed environment-bound payment reconciliation, and exactly-once-effective prompt entitlement on the Vercel target runtime.
+  triggers:
+    - checkout, order, payment webhook, library access, download, or prompt reveal changes
+    - authorization or entitlement defects affect protected products
+  ownership:
+    owner: commerce-security-engineer
+    allowedAgents: [commerce-security-engineer, domain-data-engineer, qa-release-reviewer]
+  inputs:
+    trusted:
+      authenticatedSubject: {type: server-session, fields: [userId, sessionId, authTime], required: true}
+      catalogRecord: {type: database-record, fields: [productId, status, unitAmountMinor, currency, version], required: true}
+      sellerPolicy: {const: ALIPROMPT-only, required: true}
+      verifiedWebhook: {type: verified-envelope, fields: [provider, eventId, eventType, occurredAt, rawBodyHash], required: false}
+      transitionPolicy: {type: versioned-state-machine, required: true}
+      deploymentEnvironment: {enum: [development, preview, production], required: true}
+    untrusted:
+      clientCheckout: {type: object, fields: [productId, displayedAmount, returnUrl, coupon], reason: client-controlled}
+      webhookBeforeVerification: {type: bytes, reason: attacker-controlled}
+      providerMetadata: {type: object, reason: identifiers-must-be-correlated-to-local-records}
+  outputSchema:
+    money: {fields: [amountMinorInteger, currencyISO4217]}
+    order: {fields: [orderId, userId, productId, catalogVersion, amountMinor, currency, status, providerRef, idempotencyKey, createdAt]}
+    entitlement: {fields: [entitlementId, userId, productId, sourceOrderId, status, grantedAt, revokedAt]}
+    decision: {fields: [allowed, reasonCode, orderStatus, entitlementStatus, correlationId]}
+  permissions:
+    allowedTools: [filesystem-read, scoped-write, local-database, test-runner, secret-name-read, provider-sandbox]
+    readScopes: ["<repositoryRoot>/src/**", "<repositoryRoot>/schema/**", "<repositoryRoot>/tests/**"]
+    writeScopes: ["<ownedPaths>"]
+    forbiddenSideEffects:
+      - trusting client amount, currency, userId, role, order status, or entitlement claim
+      - granting access from redirect/success-page state or an unverified webhook
+      - logging secrets, raw webhook bodies, purchased prompt content, or personal payment data
+      - live charge, refund, entitlement revoke, secret rotation, or provider config change without R3 authorization
+      - contributor checkout, contributor price control, seller onboarding, split payment, payout, commission, tax-beneficiary, or KYC workflow
+      - using a preview secret, endpoint, provider account, event, order, or database row in production or the inverse
+      - exposing payment, webhook, database, or auth secrets through client-prefixed variables, browser bundles, deployment output, logs, or preview metadata
+  workflow:
+    - Authenticate server-side, authorize product visibility, validate canonical product ID and ALIPROMPT seller ownership, and reject open redirects.
+    - Route published community contributions through the zero-price claim path only; reject checkout for them and never construct seller, payout, commission, or KYC state.
+    - Load active catalog price from the database; compute totals in integer minor units with explicit currency and catalog version.
+    - Create one local pending order per user-scoped idempotency key; send only the server snapshot to provider sandbox/API.
+    - Receive bounded raw webhook bytes, verify signature, freshness, provider account, and deployment environment before parsing, then correlate provider reference to a same-environment local order.
+    - In one transaction insert unique provider event, validate amount/currency, apply allowed monotonic transition, and upsert unique user-product entitlement.
+    - Use an outbox for notifications; duplicates return the stored result and never duplicate entitlement or fulfillment.
+    - On every protected read, authorize authenticated subject and query active entitlement; never accept entitlement from the client cache.
+  timeoutRetry:
+    timeoutSeconds: 900
+    maxAttempts: 3
+    retryOn: [provider-timeout, serialization-conflict, outbox-delivery]
+    backoff: exponential-with-jitter
+    neverRetryOn: [signature-failure, amount-mismatch, currency-mismatch, unauthorized, invalid-transition]
+  acceptanceTests:
+    - Tampered price/currency/userId is ignored or rejected; charged values equal the stored order snapshot.
+    - Anonymous and non-owner requests cannot reveal, download, or mutate protected prompt content.
+    - Invalid, stale, reordered, and duplicate webhooks cannot grant or duplicate entitlement.
+    - Concurrent valid events result in one effective order transition and one active user-product entitlement.
+    - Failed/cancelled payments grant nothing; a verified refund/reversal follows the approved transition policy.
+    - Logs and responses contain reason codes and correlation IDs but no secret or protected prompt body.
+    - Every charged item is sold by ALIPROMPT; community-contributed prompts remain free and cannot enter checkout.
+    - Preview and production webhook URLs, secrets, provider accounts, orders, ledgers, databases, and idempotency namespaces are isolated; no cross-environment event can transition value.
+  rollback:
+    strategy: feature-flag-and-forward-reconciliation
+    steps: [disable-checkout, disable-fulfillment, retain-event-ledger, run-idempotent-reconciler, restore-previous-read-path]
+    prohibition: Never delete payment/audit records or revoke customer access automatically during rollback.
+  telemetry:
+    events: [checkout.created, webhook.rejected, payment.transitioned, entitlement.granted, entitlement.denied, reconciliation.completed]
+    fields: [taskId, correlationId, provider, eventType, reasonCode, amountMinor, currency, durationMs, outcome]
+    redact: [signatures, secrets, rawWebhook, cardData, email, address, promptContent, sessionTokens]

@@ -1,0 +1,13 @@
+# Replace @founder and team handles with real GitHub identities.
+
+/AGENTS.md                         @founder
+/.ai/                             @founder
+/docs/product/                    @founder
+/docs/architecture/               @founder
+/docs/security/                   @founder
+/docs/prompt-products/            @founder
+/packages/prompt-domain/          @founder
+/packages/db/                     @founder
+/apps/                            @founder
+/tests/                           @founder
+/.github/                         @founder

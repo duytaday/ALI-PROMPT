@@ -1,0 +1,29 @@
+{
+  "project_name": "Prompt Product Platform",
+  "phase": "MVP",
+  "human_approver": "Founder",
+  "enforcement_mode": "warn",
+  "stack": {
+    "frontend": "TBD",
+    "backend": "TBD",
+    "database": "TBD",
+    "auth": "TBD",
+    "payments": "TBD",
+    "deployment": "TBD"
+  },
+  "quality_commands": {
+    "format_check": "",
+    "lint": "",
+    "typecheck": "",
+    "unit": "",
+    "integration": "",
+    "e2e": ""
+  },
+  "sensitive_paths": [
+    ".env",
+    ".env.*",
+    "**/secrets/**",
+    "**/credentials/**",
+    "infra/production/**"
+  ]
+}

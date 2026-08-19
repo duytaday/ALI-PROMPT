@@ -1,0 +1,66 @@
+{
+  "status": "adapter-only-no-database-write",
+  "canonical_source": "prompts.jsonl",
+  "repository_schema_read": [
+    "db/schema.ts",
+    "drizzle/0009_far_serpent_society.sql"
+  ],
+  "mapping": {
+    "categories": {
+      "target": "categories",
+      "map": {
+        "slug": "category_id",
+        "name": "category_name_vi",
+        "description": "description_vi"
+      },
+      "lookup_required": true
+    },
+    "prompts": {
+      "target": "prompts",
+      "map": {
+        "slug": "slug",
+        "title": "title_vi",
+        "summary": "description_vi",
+        "body": "prompt_vi + prompt_en",
+        "contentLanguage": "multilingual",
+        "moderationStatus": "approved",
+        "accessKind": "free"
+      },
+      "lookup_required": true
+    },
+    "prompt_media": {
+      "target": "prompt_media",
+      "status": "blocked_until_validated_asset_exists",
+      "map": {
+        "blobKey": "image_path",
+        "altText": "alt_text_vi",
+        "mimeType": "image_mime_type"
+      }
+    }
+  },
+  "unmapped_metadata": [
+    "title_en",
+    "description_en",
+    "prompt_en",
+    "image_prompt_used",
+    "negative_prompt",
+    "expected_output_*",
+    "difficulty",
+    "use_case",
+    "style_tags",
+    "topic_tags",
+    "aspect_ratio",
+    "generation_seed",
+    "image_sha256",
+    "quality_score",
+    "semantic_similarity_max",
+    "license"
+  ],
+  "required_before_import": [
+    "Owner approval for Development or isolated Preview only",
+    "validated generated WebP and thumbnail for each record",
+    "Blob upload authorization",
+    "import adapter review",
+    "no Production environment"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "normalized_text_hash_duplicates": [],
+  "lexical_similarity_proxy": {
+    "maximum": 0.8202,
+    "pair": [
+      "seed-business-startup-ai-agents-0002",
+      "seed-technology-saas-coding-0002"
+    ],
+    "threshold": 0.88,
+    "result": "pass"
+  },
+  "semantic_evaluator": "not_available—not claimed as semantic validation"
+}

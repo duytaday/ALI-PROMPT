@@ -1,0 +1,419 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aliprompt.vn/contracts/data10k/corpus-record.schema.v1.0.0.json",
+  "title": "ALIPROMPT DATA10K canonical visual prompt record",
+  "description": "One record is one canonical prompt. The required vi/en localizations never create additional canonical counting units.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "corpusRunId",
+    "promptKey",
+    "slug",
+    "categorySlug",
+    "promptVersion",
+    "lifecycleState",
+    "contentLanguage",
+    "localizations",
+    "canonicalImagePrompt",
+    "variableDefinitions",
+    "usageMetadata",
+    "designMetadata",
+    "modelCompatibility",
+    "safetyTaxonomy",
+    "provenance",
+    "hashing",
+    "qualityResults",
+    "demoImage"
+  ],
+  "properties": {
+    "schemaVersion": {"const": "1.0.0"},
+    "corpusRunId": {"type": "string", "pattern": "^data10k-[a-z0-9][a-z0-9-]{2,63}$"},
+    "promptKey": {"type": "string", "pattern": "^data10k:[a-z0-9]+(?:-[a-z0-9]+)*:[0-9]{4}$"},
+    "slug": {"type": "string", "minLength": 8, "maxLength": 140, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "categorySlug": {"$ref": "#/$defs/categorySlug"},
+    "promptVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "lifecycleState": {"enum": ["candidate", "g0_reference", "accepted", "rejected", "safety_held", "archived"]},
+    "contentLanguage": {"const": "multilingual"},
+    "localizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vi", "en"],
+      "properties": {
+        "vi": {"$ref": "#/$defs/localization"},
+        "en": {"$ref": "#/$defs/localization"}
+      }
+    },
+    "canonicalImagePrompt": {"type": "string", "minLength": 220, "maxLength": 5000},
+    "variableDefinitions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {"$ref": "#/$defs/variableDefinition"}
+    },
+    "usageMetadata": {"$ref": "#/$defs/usageMetadata"},
+    "designMetadata": {"$ref": "#/$defs/designMetadata"},
+    "modelCompatibility": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/modelCompatibility"}
+    },
+    "safetyTaxonomy": {"$ref": "#/$defs/safetyTaxonomy"},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "hashing": {"$ref": "#/$defs/hashing"},
+    "qualityResults": {"$ref": "#/$defs/qualityResults"},
+    "demoImage": {"$ref": "#/$defs/demoImage"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"lifecycleState": {"const": "accepted"}}, "required": ["lifecycleState"]},
+      "then": {
+        "properties": {
+          "safetyTaxonomy": {"type": "object", "properties": {"reviewStatus": {"const": "pass"}}, "required": ["reviewStatus"]},
+          "qualityResults": {"type": "object", "properties": {"semantic": {"type": "object", "properties": {"passed": {"const": true}}, "required": ["passed"]}}, "required": ["semantic"]},
+          "demoImage": {"type": "object", "properties": {"kind": {"const": "generated_demo"}, "status": {"const": "validated"}}, "required": ["kind", "status"]}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "categorySlug": {
+      "enum": [
+        "brand-identity-systems",
+        "abstract-mark-logo-exploration",
+        "packaging-design",
+        "product-photography",
+        "advertising-key-visuals",
+        "social-media-campaign-design",
+        "poster-design",
+        "editorial-magazine-design",
+        "original-book-album-cover-concepts",
+        "typography-lettering-exploration",
+        "infographics-data-visuals",
+        "ui-ux-hero-onboarding-illustration",
+        "icons-pictograms",
+        "2d-editorial-illustration",
+        "3d-illustration",
+        "isometric-scenes",
+        "patterns-textures-materials",
+        "presentation-product-mockups",
+        "architecture-visualization",
+        "interior-visualization",
+        "fashion-editorial",
+        "food-beverage-imagery",
+        "beauty-cosmetics-imagery",
+        "portrait-lifestyle-photography",
+        "motion-storyboard-keyframes"
+      ]
+    },
+    "localizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vi", "en"],
+      "properties": {
+        "vi": {"type": "string", "minLength": 2, "maxLength": 2000},
+        "en": {"type": "string", "minLength": 2, "maxLength": 2000}
+      }
+    },
+    "localization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "summary", "usageInstructions", "promptTemplate"],
+      "properties": {
+        "title": {"type": "string", "minLength": 8, "maxLength": 180},
+        "summary": {"type": "string", "minLength": 40, "maxLength": 500},
+        "usageInstructions": {"type": "string", "minLength": 80, "maxLength": 2000},
+        "promptTemplate": {"type": "string", "minLength": 220, "maxLength": 5000}
+      }
+    },
+    "jsonScalar": {
+      "anyOf": [
+        {"type": "string"},
+        {"type": "integer"},
+        {"type": "number"},
+        {"type": "boolean"}
+      ]
+    },
+    "variableDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "placeholder", "type", "required", "description", "default", "demoValue", "examples"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-zA-Z0-9]{1,39}$"},
+        "placeholder": {"type": "string", "pattern": "^\\{\\{[a-z][a-zA-Z0-9]{1,39}\\}\\}$"},
+        "type": {"enum": ["string", "integer", "number", "boolean", "enum", "color", "aspect_ratio"]},
+        "required": {"type": "boolean"},
+        "description": {"$ref": "#/$defs/localizedText"},
+        "default": {"$ref": "#/$defs/jsonScalar"},
+        "demoValue": {"$ref": "#/$defs/jsonScalar"},
+        "examples": {"type": "array", "minItems": 1, "maxItems": 5, "items": {"$ref": "#/$defs/jsonScalar"}},
+        "allowedValues": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/jsonScalar"}},
+        "minimum": {"type": "number"},
+        "maximum": {"type": "number"}
+      }
+    },
+    "usageMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["useCase", "expectedResult", "difficulty", "setupTimeMinutes", "outputType", "steps"],
+      "properties": {
+        "useCase": {"$ref": "#/$defs/localizedText"},
+        "expectedResult": {"$ref": "#/$defs/localizedText"},
+        "difficulty": {"enum": ["simple", "intermediate", "advanced"]},
+        "setupTimeMinutes": {"type": "integer", "minimum": 1, "maximum": 120},
+        "outputType": {"enum": ["identity_system", "logo_exploration", "packaging", "photograph", "key_visual", "social_campaign", "poster", "editorial_layout", "cover", "typography", "infographic", "ui_illustration", "icon_set", "2d_illustration", "3d_illustration", "isometric_scene", "pattern_texture", "mockup", "architecture_visualization", "interior_visualization", "fashion_editorial", "food_beverage_image", "beauty_image", "portrait_lifestyle_photo", "storyboard_keyframes"]},
+        "steps": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["vi", "en"],
+          "properties": {
+            "vi": {"type": "array", "minItems": 2, "maxItems": 8, "items": {"type": "string", "minLength": 10, "maxLength": 400}},
+            "en": {"type": "array", "minItems": 2, "maxItems": 8, "items": {"type": "string", "minLength": 10, "maxLength": 400}}
+          }
+        }
+      }
+    },
+    "designMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objective", "deliverable", "subject", "context", "composition", "visualHierarchy", "artDirection", "medium", "lighting", "colorPalette", "textureMaterials", "cameraLens", "aspectRatio", "typographyConstraints", "negativeConstraints"],
+      "properties": {
+        "objective": {"$ref": "#/$defs/localizedText"},
+        "deliverable": {"$ref": "#/$defs/localizedText"},
+        "subject": {"$ref": "#/$defs/localizedText"},
+        "context": {"$ref": "#/$defs/localizedText"},
+        "composition": {"$ref": "#/$defs/localizedText"},
+        "visualHierarchy": {"$ref": "#/$defs/localizedText"},
+        "artDirection": {"$ref": "#/$defs/localizedText"},
+        "medium": {"type": "string", "minLength": 3, "maxLength": 200},
+        "lighting": {"type": "string", "minLength": 3, "maxLength": 300},
+        "colorPalette": {"type": "array", "minItems": 2, "maxItems": 10, "items": {"type": "string", "minLength": 2, "maxLength": 80}},
+        "textureMaterials": {"type": "array", "minItems": 1, "maxItems": 10, "items": {"type": "string", "minLength": 2, "maxLength": 120}},
+        "cameraLens": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["cameraView", "lensOrProjection", "depthOfField"],
+              "properties": {
+                "cameraView": {"type": "string", "minLength": 3, "maxLength": 200},
+                "lensOrProjection": {"type": "string", "minLength": 2, "maxLength": 120},
+                "depthOfField": {"type": "string", "minLength": 2, "maxLength": 120}
+              }
+            }
+          ]
+        },
+        "aspectRatio": {"type": "string", "pattern": "^[1-9][0-9]?:[1-9][0-9]?$"},
+        "typographyConstraints": {"type": "array", "minItems": 1, "maxItems": 10, "items": {"type": "string", "minLength": 3, "maxLength": 240}},
+        "negativeConstraints": {"type": "array", "minItems": 3, "maxItems": 20, "items": {"type": "string", "minLength": 3, "maxLength": 240}}
+      }
+    },
+    "modelCompatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model", "status", "evidenceRef", "reviewedAt"],
+      "properties": {
+        "provider": {"type": "string", "minLength": 2, "maxLength": 120},
+        "model": {"type": "string", "minLength": 2, "maxLength": 120},
+        "status": {"enum": ["Unknown", "verified", "incompatible"]},
+        "evidenceRef": {"type": ["string", "null"], "maxLength": 500},
+        "reviewedAt": {"type": ["string", "null"], "format": "date-time"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "Unknown"}}, "required": ["status"]},
+          "then": {"properties": {"provider": {"const": "Unknown"}, "model": {"const": "Unknown"}, "evidenceRef": {"type": "null"}, "reviewedAt": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"status": {"enum": ["verified", "incompatible"]}}, "required": ["status"]},
+          "then": {"properties": {"evidenceRef": {"type": "string", "minLength": 8}, "reviewedAt": {"type": "string", "format": "date-time"}}}
+        }
+      ]
+    },
+    "safetyTaxonomy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewStatus", "reasonCodes", "originalContentDeclared", "cleanRoom", "riskFlags"],
+      "properties": {
+        "reviewStatus": {"enum": ["pass", "hold", "reject"]},
+        "reasonCodes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"}},
+        "originalContentDeclared": {"const": true},
+        "cleanRoom": {"const": true},
+        "riskFlags": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["copyrightCharacter", "trademarkTradeDress", "publicFigure", "privatePersonData", "livingArtistImitation", "deceptiveDocument", "impersonationFraud", "unsafeSexual", "unsafeViolentHate", "regulatedHighRisk", "sensitiveTraitInference"],
+          "properties": {
+            "copyrightCharacter": {"type": "boolean"},
+            "trademarkTradeDress": {"type": "boolean"},
+            "publicFigure": {"type": "boolean"},
+            "privatePersonData": {"type": "boolean"},
+            "livingArtistImitation": {"type": "boolean"},
+            "deceptiveDocument": {"type": "boolean"},
+            "impersonationFraud": {"type": "boolean"},
+            "unsafeSexual": {"type": "boolean"},
+            "unsafeViolentHate": {"type": "boolean"},
+            "regulatedHighRisk": {"type": "boolean"},
+            "sensitiveTraitInference": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generationSurface", "generatorModelId", "generatorTemplateVersion", "generatedAt", "reviewerState", "reviewerId", "reviewedAt", "originalContentDeclaration", "externalSourceMaterials"],
+      "properties": {
+        "generationSurface": {"type": "string", "minLength": 2, "maxLength": 120},
+        "generatorModelId": {"type": ["string", "null"], "maxLength": 160},
+        "generatorTemplateVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "generatedAt": {"type": "string", "format": "date-time"},
+        "reviewerState": {"enum": ["unreviewed", "architect_reference_reviewed", "machine_reviewed", "human_reviewed", "held", "rejected"]},
+        "reviewerId": {"type": ["string", "null"], "maxLength": 160},
+        "reviewedAt": {"type": ["string", "null"], "format": "date-time"},
+        "originalContentDeclaration": {"const": "clean-room original; no PromptVN or marketplace content/assets used"},
+        "externalSourceMaterials": {"type": "array", "maxItems": 0}
+      }
+    },
+    "hashing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["normalizationVersion", "normalizedContentHash", "dedupeCluster", "semanticClusterMethod"],
+      "properties": {
+        "normalizationVersion": {"const": "data10k-normalize-v1"},
+        "normalizedContentHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "dedupeCluster": {"type": "string", "pattern": "^cluster:[a-z0-9][a-z0-9-]{2,80}$"},
+        "semanticClusterMethod": {"enum": ["reference_sample", "pilot_calibrated", "pending_pilot_calibration"]}
+      }
+    },
+    "scoreDimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectiveClarity", "designSpecificity", "compositionHierarchy", "controllability", "outputUsefulness", "localization", "safetyOriginality", "internalConsistency", "uniqueness"],
+      "properties": {
+        "objectiveClarity": {"type": "integer", "minimum": 0, "maximum": 4},
+        "designSpecificity": {"type": "integer", "minimum": 0, "maximum": 4},
+        "compositionHierarchy": {"type": "integer", "minimum": 0, "maximum": 4},
+        "controllability": {"type": "integer", "minimum": 0, "maximum": 4},
+        "outputUsefulness": {"type": "integer", "minimum": 0, "maximum": 4},
+        "localization": {"type": "integer", "minimum": 0, "maximum": 4},
+        "safetyOriginality": {"type": "integer", "minimum": 0, "maximum": 4},
+        "internalConsistency": {"type": "integer", "minimum": 0, "maximum": 4},
+        "uniqueness": {"type": "integer", "minimum": 0, "maximum": 4}
+      }
+    },
+    "qualityResults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rubricVersion", "deterministic", "semantic"],
+      "properties": {
+        "rubricVersion": {"const": "1.0.0"},
+        "deterministic": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schemaValid", "placeholderRoundTripValid", "localeCoverageValid", "categoryValid", "forbiddenTermScanPassed", "contentHashValid", "exactHashUnique"],
+          "properties": {
+            "schemaValid": {"type": "boolean"},
+            "placeholderRoundTripValid": {"type": "boolean"},
+            "localeCoverageValid": {"type": "boolean"},
+            "categoryValid": {"type": "boolean"},
+            "forbiddenTermScanPassed": {"type": "boolean"},
+            "contentHashValid": {"type": "boolean"},
+            "exactHashUnique": {"type": "boolean"}
+          }
+        },
+        "semantic": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reviewState", "weightedScore", "passThreshold", "passed", "dimensions", "reasonCodes"],
+          "properties": {
+            "reviewState": {"enum": ["pending", "architect_reference_review", "semantic_review", "human_review"]},
+            "weightedScore": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+            "passThreshold": {"const": 80},
+            "passed": {"type": ["boolean", "null"]},
+            "dimensions": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/scoreDimensions"}]},
+            "reasonCodes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"}}
+          }
+        }
+      }
+    },
+    "localizedAlt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vi", "en"],
+      "properties": {
+        "vi": {"type": "string", "minLength": 10, "maxLength": 240},
+        "en": {"type": "string", "minLength": 10, "maxLength": 240}
+      }
+    },
+    "demoImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "status", "canonicalVariables", "generationPromptHash", "provider", "model", "snapshot", "attempt", "generatedAt", "parameters", "width", "height", "mimeType", "bytes", "sha256", "perceptualHash", "blobKey", "altText"],
+      "properties": {
+        "kind": {"enum": ["placeholder_cover", "generated_demo"]},
+        "status": {"enum": ["not_generated", "staged", "validated", "rejected"]},
+        "canonicalVariables": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/jsonScalar"}},
+        "generationPromptHash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "provider": {"type": ["string", "null"], "maxLength": 120},
+        "model": {"type": ["string", "null"], "maxLength": 120},
+        "snapshot": {"type": ["string", "null"], "maxLength": 160},
+        "attempt": {"type": ["integer", "null"], "minimum": 1},
+        "generatedAt": {"type": ["string", "null"], "format": "date-time"},
+        "parameters": {"type": "object", "additionalProperties": {"$ref": "#/$defs/jsonScalar"}},
+        "width": {"type": ["integer", "null"], "minimum": 1},
+        "height": {"type": ["integer", "null"], "minimum": 1},
+        "mimeType": {"type": ["string", "null"], "enum": [null, "image/webp", "image/png", "image/jpeg"]},
+        "bytes": {"type": ["integer", "null"], "minimum": 1},
+        "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "perceptualHash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{16,128}$"},
+        "blobKey": {"type": ["string", "null"], "maxLength": 512},
+        "altText": {"$ref": "#/$defs/localizedAlt"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"kind": {"const": "placeholder_cover"}}, "required": ["kind"]},
+          "then": {
+            "properties": {
+              "status": {"const": "not_generated"},
+              "generationPromptHash": {"type": "null"},
+              "provider": {"type": "null"},
+              "model": {"type": "null"},
+              "snapshot": {"type": "null"},
+              "attempt": {"type": "null"},
+              "generatedAt": {"type": "null"},
+              "width": {"type": "null"},
+              "height": {"type": "null"},
+              "mimeType": {"type": "null"},
+              "bytes": {"type": "null"},
+              "sha256": {"type": "null"},
+              "perceptualHash": {"type": "null"},
+              "blobKey": {"type": "null"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"kind": {"const": "generated_demo"}}, "required": ["kind"]},
+          "then": {
+            "properties": {
+              "status": {"const": "validated"},
+              "generationPromptHash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+              "provider": {"type": "string", "minLength": 2},
+              "model": {"type": "string", "minLength": 2},
+              "attempt": {"type": "integer", "minimum": 1},
+              "generatedAt": {"type": "string", "format": "date-time"},
+              "width": {"type": "integer", "minimum": 1},
+              "height": {"type": "integer", "minimum": 1},
+              "mimeType": {"enum": ["image/webp", "image/png", "image/jpeg"]},
+              "bytes": {"type": "integer", "minimum": 1},
+              "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+              "perceptualHash": {"type": "string", "pattern": "^[a-f0-9]{16,128}$"},
+              "blobKey": {"type": "string", "minLength": 8, "maxLength": 512}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

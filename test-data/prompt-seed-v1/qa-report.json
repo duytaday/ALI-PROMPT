@@ -1,0 +1,85 @@
+{
+  "status": "incomplete_pending_image_generation",
+  "run_mode": "prompt-only",
+  "total_prompt_records": 1000,
+  "total_image_files": 0,
+  "total_thumbnail_files": 0,
+  "category_count": 10,
+  "records_per_category": {
+    "social-media-short-video": 100,
+    "marketing-branding-aeo": 100,
+    "ecommerce-product-visuals": 100,
+    "visual-design-ai-art": 100,
+    "business-startup-ai-agents": 100,
+    "education-learning": 100,
+    "technology-saas-coding": 100,
+    "career-personal-branding": 100,
+    "architecture-interior-real-estate": 100,
+    "food-travel-wellness-lifestyle": 100
+  },
+  "image_status_counts": {
+    "pending": 1000
+  },
+  "missing_image_files": 1000,
+  "duplicate_ids": 0,
+  "duplicate_slugs": 0,
+  "duplicate_normalized_prompt_hashes": 0,
+  "invalid_images": 0,
+  "schema_errors": 0,
+  "production_writes": 0,
+  "lexical_similarity_proxy": {
+    "maximum": 0.961,
+    "pair": [
+      "seed-marketing-branding-aeo-0062",
+      "seed-marketing-branding-aeo-0092"
+    ],
+    "threshold": 0.88,
+    "result": "review"
+  },
+  "semantic_evaluator": "not_available—not claimed as semantic validation",
+  "moderation": {
+    "status": "template-safety-scan-pass",
+    "records": 1000,
+    "human_or_vision_review_required_before_approval": true
+  },
+  "image_qa": {
+    "status": "not-run—no images were generated"
+  },
+  "full_run_estimate": {
+    "requested_image_api_calls": 1000,
+    "actual_image_api_calls": 0,
+    "actual_image_files": 0,
+    "estimated_cost": {
+      "value": null,
+      "currency": null,
+      "status": "not_computable",
+      "reason": "No approved provider, SKU, or price basis was supplied."
+    },
+    "estimated_time": {
+      "value": "50 minutes at an illustrative 20 successful images/minute, plus up to 85 minutes of specified retry backoff",
+      "status": "assumption—not-provider-SLA"
+    },
+    "estimated_storage": {
+      "original_webp_mb": 600,
+      "thumbnails_mb": 80,
+      "total_mb": 680,
+      "basis": "illustrative average 600 KB/image and 80 KB/thumbnail"
+    },
+    "batches": 100,
+    "records_per_batch": 10,
+    "retry_policy": [
+      {
+        "attempt": 1,
+        "backoff_seconds": 5
+      },
+      {
+        "attempt": 2,
+        "backoff_seconds": 20
+      },
+      {
+        "attempt": 3,
+        "backoff_seconds": 60
+      }
+    ]
+  }
+}

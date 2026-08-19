@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { count, desc } from "drizzle-orm";
-import { ensureLeadStorage, getDb } from "../../db";
+import { getDb } from "../../db";
 import { leads } from "../../db/schema";
-import { chatGPTSignOutPath } from "../chatgpt-auth";
 import { requireAdminUser } from "../../lib/admin-auth";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +18,10 @@ const stageLabels = {
   agent_waitlist: "AI Agent",
   prompt_pack: "Ngành mới",
 } as const;
+
+function isKnownStage(value: string): value is keyof typeof stageLabels {
+  return value in stageLabels;
+}
 
 function formatDate(value: string) {
   const parsed = new Date(`${value.replace(" ", "T")}Z`);
@@ -35,7 +38,6 @@ export default async function AdminPage() {
   const admin = await requireAdminUser("/admin");
   if (!admin) notFound();
 
-  await ensureLeadStorage();
   const db = getDb();
   const [rows, groupedCounts] = await Promise.all([
     db.select().from(leads).orderBy(desc(leads.lastSubmittedAt)).limit(250),
@@ -48,7 +50,7 @@ export default async function AdminPage() {
   const counts = groupedCounts.reduce(
     (current, group) => {
       current.total += group.value;
-      current[group.stage] = group.value;
+      if (isKnownStage(group.stage)) current[group.stage] = group.value;
       return current;
     },
     { total: 0, workshop: 0, agent_waitlist: 0, prompt_pack: 0 },
@@ -63,7 +65,7 @@ export default async function AdminPage() {
         </Link>
         <div>
           <span className="admin-identity">{admin.displayName}</span>
-          <a href={chatGPTSignOutPath("/")}>Đăng xuất</a>
+          <form action="/api/auth/logout" method="post"><button type="submit">Đăng xuất</button></form>
         </div>
       </header>
 
@@ -76,6 +78,14 @@ export default async function AdminPage() {
         <a className="button button-primary" href="/api/admin/leads.csv">
           Xuất CSV <span aria-hidden="true">↓</span>
         </a>
+        <Link className="button" href="/admin/submissions">Kiểm duyệt prompt</Link>
+        <Link className="button" href="/admin/reports">Xử lý báo cáo</Link>
+        <Link className="button" href="/admin/products">Sản phẩm</Link>
+        <Link className="button" href="/admin/articles">Bài viết</Link>
+        <Link className="button" href="/admin/entitlements">Quyền truy cập</Link>
+        <Link className="button" href="/admin/orders">Đơn hàng</Link>
+        <Link className="button" href="/admin/prompts">Prompt ALIPROMPT</Link>
+        <Link className="button" href="/admin/categories">Chủ đề</Link>
       </section>
 
       <section className="admin-stats" aria-label="Tổng hợp đăng ký">
@@ -112,7 +122,7 @@ export default async function AdminPage() {
                   <td><strong>{lead.name}</strong></td>
                   <td><a href={lead.contact.includes("@") ? `mailto:${lead.contact}` : `tel:${lead.contact}`}>{lead.contact}</a></td>
                   <td>{lead.role}</td>
-                  <td><span className={`admin-stage ${lead.stage}`}>{stageLabels[lead.stage]}</span></td>
+                  <td><span className={`admin-stage ${lead.stage}`}>{isKnownStage(lead.stage) ? stageLabels[lead.stage] : lead.stage}</span></td>
                   <td>{lead.source}</td>
                 </tr>
               ))}

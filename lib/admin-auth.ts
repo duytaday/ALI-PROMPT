@@ -1,27 +1,17 @@
-import { env } from "cloudflare:workers";
-import { getChatGPTUser, requireChatGPTUser, type ChatGPTUser } from "../app/chatgpt-auth";
+import { redirect } from "next/navigation";
+import { getCurrentUser, type AuthenticatedUser } from "./auth";
 
-type AliPromptRuntimeEnv = {
-  ALIPROMPT_ADMIN_USER_ID?: string;
-};
-
-function configuredAdminUserId() {
-  const runtime = env as unknown as AliPromptRuntimeEnv;
-  return runtime.ALIPROMPT_ADMIN_USER_ID?.trim() ?? "";
+export function isAdminUser(user: AuthenticatedUser) {
+  return user.role === "admin";
 }
 
-export function isAdminUserId(userId: string) {
-  const adminUserId = configuredAdminUserId();
-  return Boolean(adminUserId) && userId === adminUserId;
+export async function getAdminUser(): Promise<AuthenticatedUser | null> {
+  const user = await getCurrentUser();
+  return user && isAdminUser(user) ? user : null;
 }
 
-export async function getAdminUser(): Promise<ChatGPTUser | null> {
-  const user = await getChatGPTUser();
-  return user && isAdminUserId(user.userId) ? user : null;
+export async function requireAdminUser(returnTo: string): Promise<AuthenticatedUser | null> {
+  const user = await getCurrentUser();
+  if (!user) redirect(`/login?return_to=${encodeURIComponent(returnTo)}`);
+  return isAdminUser(user) ? user : null;
 }
-
-export async function requireAdminUser(returnTo: string): Promise<ChatGPTUser | null> {
-  const user = await requireChatGPTUser(returnTo);
-  return isAdminUserId(user.userId) ? user : null;
-}
-

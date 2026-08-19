@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "1.0.0",
+  "corpusRunId": "data10k-g0-reference-20260819",
+  "promptKey": "data10k:motion-storyboard-keyframes:0001",
+  "slug": "modular-object-assembly-motion-keyframes",
+  "categorySlug": "motion-storyboard-keyframes",
+  "promptVersion": "1.0.0",
+  "lifecycleState": "g0_reference",
+  "contentLanguage": "multilingual",
+  "localizations": {
+    "vi": {
+      "title": "Storyboard lắp ráp vật thể mô-đun bằng sáu khung hình",
+      "summary": "Tạo chuỗi khung hình chính nguyên bản mô tả một vật thể trừu tượng tự lắp ráp, với nhịp chuyển động và tính liên tục dễ đánh giá.",
+      "usageInstructions": "Chọn loại vật thể trừu tượng, kiểu chuyển cảnh, số khung, màu nhấn và tỉ lệ đầu ra. Giữ số khung từ bốn đến tám để mỗi giai đoạn chuyển động còn đọc được; dùng kết quả làm storyboard định hướng chứ không xem là video hoàn thiện.",
+      "promptTemplate": "Tạo storyboard gồm {{frameCount}} khung hình liên tiếp cho một {{objectType}} trừu tượng tự lắp ráp bằng chuyển động {{transitionMode}}. Trình bày các khung theo lưới đọc từ trái sang phải, giữ cùng góc máy, tỉ lệ vật thể và hướng sáng. Khung đầu là các mô-đun tách rời; các khung giữa cho thấy đường chuyển động rõ nhưng không dùng mũi tên; khung cuối là vật thể hoàn chỉnh với một điểm nhấn {{accentColor}}. Nền sáng trung tính, bóng mềm, hình học đơn giản, tỉ lệ bảng {{aspectRatio}}. Không logo, không nhân vật, không chữ ngẫu nhiên, không giao diện thật, không nhãn thời gian giả, không watermark; mọi khung phải có khoảng thở và không bị cắt mép."
+    },
+    "en": {
+      "title": "Six-frame storyboard for a modular object assembly",
+      "summary": "Create an original keyframe sequence showing an abstract object assembling itself, with motion rhythm and continuity that are easy to evaluate.",
+      "usageInstructions": "Choose the abstract object type, transition behavior, frame count, accent color, and output ratio. Keep the sequence between four and eight frames so every motion stage remains legible; treat the result as a direction storyboard rather than a finished video.",
+      "promptTemplate": "Create a {{frameCount}}-frame sequential storyboard of an abstract {{objectType}} assembling itself through {{transitionMode}} motion. Arrange frames in a left-to-right reading grid while preserving camera angle, object scale, and light direction. Start with separated modules; use the middle frames to show clear motion paths without arrows; finish on the complete object with one restrained {{accentColor}} accent. Use a light neutral background, soft shadows, simple geometry, and a {{aspectRatio}} board. No logos, characters, random text, real interfaces, fabricated time labels, or watermarks; give every frame breathing room and keep all geometry inside the crop."
+    }
+  },
+  "canonicalImagePrompt": "Build a provider-neutral {{frameCount}}-frame storyboard in a left-to-right grid. Show an abstract {{objectType}} progressing from separated modules to a fully assembled form through {{transitionMode}} motion. Lock the camera, object scale, ground plane, and light direction across every frame. Make intermediate spatial changes readable through position and deformation without arrows or captions. Reserve {{accentColor}} for one small final-state emphasis, use a light neutral background with soft grounded shadows, and compose the full board at {{aspectRatio}}. Exclude logos, characters, recognizable products, random text, fabricated interface labels, watermarks, inconsistent geometry, clipped frames, and abrupt continuity breaks.",
+  "variableDefinitions": [
+    {
+      "name": "objectType",
+      "placeholder": "{{objectType}}",
+      "type": "enum",
+      "required": true,
+      "description": {"vi": "Loại vật thể trừu tượng dùng xuyên suốt chuỗi.", "en": "Abstract object type used throughout the sequence."},
+      "default": "stacked ring sculpture",
+      "demoValue": "stacked ring sculpture",
+      "examples": ["stacked ring sculpture", "faceted seed form", "modular arch"],
+      "allowedValues": ["stacked ring sculpture", "faceted seed form", "modular arch"]
+    },
+    {
+      "name": "transitionMode",
+      "placeholder": "{{transitionMode}}",
+      "type": "enum",
+      "required": true,
+      "description": {"vi": "Cơ chế chuyển động giữa các khung.", "en": "Motion behavior between frames."},
+      "default": "measured magnetic attraction",
+      "demoValue": "measured magnetic attraction",
+      "examples": ["measured magnetic attraction", "gentle folding", "ordered vertical lift"],
+      "allowedValues": ["measured magnetic attraction", "gentle folding", "ordered vertical lift"]
+    },
+    {
+      "name": "frameCount",
+      "placeholder": "{{frameCount}}",
+      "type": "integer",
+      "required": true,
+      "description": {"vi": "Số khung chính trong storyboard.", "en": "Number of storyboard keyframes."},
+      "default": 6,
+      "demoValue": 6,
+      "examples": [4, 6, 8],
+      "minimum": 4,
+      "maximum": 8
+    },
+    {
+      "name": "accentColor",
+      "placeholder": "{{accentColor}}",
+      "type": "color",
+      "required": true,
+      "description": {"vi": "Màu nhấn nhỏ ở trạng thái cuối.", "en": "Small accent color in the final state."},
+      "default": "cobalt blue",
+      "demoValue": "cobalt blue",
+      "examples": ["cobalt blue", "burnt orange"]
+    },
+    {
+      "name": "aspectRatio",
+      "placeholder": "{{aspectRatio}}",
+      "type": "aspect_ratio",
+      "required": true,
+      "description": {"vi": "Tỉ lệ toàn bảng storyboard.", "en": "Overall storyboard board ratio."},
+      "default": "16:9",
+      "demoValue": "16:9",
+      "examples": ["16:9", "4:3"],
+      "allowedValues": ["16:9", "4:3"]
+    }
+  ],
+  "usageMetadata": {
+    "useCase": {"vi": "Khóa nhịp và tính liên tục cho đoạn chuyển động lắp ráp ngắn.", "en": "Lock rhythm and continuity for a short assembly-motion concept."},
+    "expectedResult": {"vi": "Một bảng storyboard có thể đọc từ trái sang phải, cho thấy điểm đầu, tiến trình và trạng thái hoàn tất mà không cần chú thích giả.", "en": "A left-to-right storyboard that communicates start, progression, and completion without fabricated labels."},
+    "difficulty": "advanced",
+    "setupTimeMinutes": 18,
+    "outputType": "storyboard_keyframes",
+    "steps": {
+      "vi": ["Chọn vật thể và cơ chế chuyển động có thể chia thành các trạng thái rõ ràng.", "Tạo bảng khung hình rồi kiểm tra khóa góc máy, tỉ lệ và hướng sáng.", "Ghi chú thời lượng và easing bằng công cụ storyboard riêng sau khi duyệt hình."],
+      "en": ["Choose an object and motion behavior that can be divided into clear states.", "Generate the frame board and inspect camera, scale, and light-direction continuity.", "Add timing and easing notes in a dedicated storyboard tool after visual approval."]
+    }
+  },
+  "designMetadata": {
+    "objective": {"vi": "Làm rõ quá trình tự lắp ráp qua các trạng thái hình học liên tục.", "en": "Clarify a self-assembly process through continuous geometric states."},
+    "deliverable": {"vi": "Bảng storyboard khung hình chính để duyệt hướng chuyển động.", "en": "A keyframe storyboard board for motion-direction review."},
+    "subject": {"vi": "Một vật thể điêu khắc trừu tượng gồm các mô-đun hình học.", "en": "An abstract sculptural object made from geometric modules."},
+    "context": {"vi": "Bối cảnh studio phi thương hiệu, tập trung vào logic chuyển động thay vì sản phẩm thật.", "en": "A brand-neutral studio context focused on motion logic rather than a real product."},
+    "composition": {"vi": "Lưới khung hình đọc trái sang phải, khoảng cách đều, cùng đường chân và cùng tỉ lệ vật thể.", "en": "A left-to-right frame grid with even gutters, one baseline, and consistent object scale."},
+    "visualHierarchy": {"vi": "Đường tiến triển của toàn chuỗi trước, biến đổi trong từng khung sau, màu nhấn cuối cùng.", "en": "Overall sequence progression first, per-frame transformation second, final accent last."},
+    "artDirection": {"vi": "Hình học 3D tối giản, vật liệu mờ, chuyển động có chủ đích và không mô phỏng giao diện có sẵn.", "en": "Minimal 3D geometry, matte materials, deliberate motion, and no imitation of existing interface language."},
+    "medium": "clean 3D storyboard keyframe render",
+    "lighting": "fixed broad overhead-left source with soft fill and consistent grounded shadows",
+    "colorPalette": ["warm light gray", "charcoal", "cobalt blue"],
+    "textureMaterials": ["matte ceramic", "soft neutral ground plane"],
+    "cameraLens": {"cameraView": "locked elevated three-quarter view", "lensOrProjection": "near-orthographic projection", "depthOfField": "deep focus across all modules"},
+    "aspectRatio": "16:9",
+    "typographyConstraints": ["No generated captions or frame numbers", "Add timing annotations later in a storyboard tool"],
+    "negativeConstraints": ["no logos or recognizable products", "no people or characters", "no random text or fabricated interface labels", "no watermarks", "no camera or lighting drift", "no clipped modules or continuity breaks"]
+  },
+  "modelCompatibility": [
+    {"provider": "Unknown", "model": "Unknown", "status": "Unknown", "evidenceRef": null, "reviewedAt": null}
+  ],
+  "safetyTaxonomy": {
+    "reviewStatus": "pass",
+    "reasonCodes": [],
+    "originalContentDeclared": true,
+    "cleanRoom": true,
+    "riskFlags": {
+      "copyrightCharacter": false,
+      "trademarkTradeDress": false,
+      "publicFigure": false,
+      "privatePersonData": false,
+      "livingArtistImitation": false,
+      "deceptiveDocument": false,
+      "impersonationFraud": false,
+      "unsafeSexual": false,
+      "unsafeViolentHate": false,
+      "regulatedHighRisk": false,
+      "sensitiveTraitInference": false
+    }
+  },
+  "provenance": {
+    "generationSurface": "Codex desktop local architecture task",
+    "generatorModelId": null,
+    "generatorTemplateVersion": "1.0.0",
+    "generatedAt": "2026-08-19T00:00:00Z",
+    "reviewerState": "architect_reference_reviewed",
+    "reviewerId": "data10k-corpus-architect-local",
+    "reviewedAt": "2026-08-19T00:00:00Z",
+    "originalContentDeclaration": "clean-room original; no PromptVN or marketplace content/assets used",
+    "externalSourceMaterials": []
+  },
+  "hashing": {
+    "normalizationVersion": "data10k-normalize-v1",
+    "normalizedContentHash": "fa3aabf833bf1b8520e4cd5cae1329b45e39a0447cfdf381e1c03f71bf56a367",
+    "dedupeCluster": "cluster:motion-modular-assembly-001",
+    "semanticClusterMethod": "reference_sample"
+  },
+  "qualityResults": {
+    "rubricVersion": "1.0.0",
+    "deterministic": {"schemaValid": true, "placeholderRoundTripValid": true, "localeCoverageValid": true, "categoryValid": true, "forbiddenTermScanPassed": true, "contentHashValid": true, "exactHashUnique": true},
+    "semantic": {
+      "reviewState": "architect_reference_review",
+      "weightedScore": 98.5,
+      "passThreshold": 80,
+      "passed": true,
+      "dimensions": {"objectiveClarity": 4, "designSpecificity": 4, "compositionHierarchy": 4, "controllability": 4, "outputUsefulness": 4, "localization": 4, "safetyOriginality": 4, "internalConsistency": 4, "uniqueness": 3},
+      "reasonCodes": []
+    }
+  },
+  "demoImage": {
+    "kind": "placeholder_cover",
+    "status": "not_generated",
+    "canonicalVariables": {"objectType": "stacked ring sculpture", "transitionMode": "measured magnetic attraction", "frameCount": 6, "accentColor": "cobalt blue", "aspectRatio": "16:9"},
+    "generationPromptHash": null,
+    "provider": null,
+    "model": null,
+    "snapshot": null,
+    "attempt": null,
+    "generatedAt": null,
+    "parameters": {},
+    "width": null,
+    "height": null,
+    "mimeType": null,
+    "bytes": null,
+    "sha256": null,
+    "perceptualHash": null,
+    "blobKey": null,
+    "altText": {"vi": "Bìa giữ chỗ mô tả chuỗi sáu khung lắp ráp một vật thể vòng trừu tượng.", "en": "Placeholder cover describing six frames that assemble an abstract ring sculpture."}
+  }
+}

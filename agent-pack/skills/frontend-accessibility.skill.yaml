@@ -1,0 +1,79 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: frontend-accessibility
+  version: 1.2.0
+spec:
+  purpose: Build the original public marketplace, account, community, editorial, and commerce UI so it is responsive, theme-aware, keyboard, screen-reader, and reduced-motion usable.
+  triggers:
+    - a slice adds or changes discovery, rails, cards, quick view, engagement, submission, auth, library, profile, leaderboard, blog, theme, floating actions, checkout, or account state
+    - accessibility, responsiveness, or interaction regressions are reported
+  ownership:
+    owner: frontend-ux-engineer
+    allowedAgents: [frontend-ux-engineer, cleanroom-reference-analyst, qa-release-reviewer]
+  inputs:
+    trusted:
+      designTokens: {type: repository-contract, required: true}
+      apiContract: {type: versioned-schema, required: true}
+      authAndActionContract: {type: versioned-server-contract, required: true}
+      featureCriteria: {type: cleanroom-criteria, required: true}
+      ownedPaths: {type: array<repository-path>, required: true}
+    untrusted:
+      productCopy: {type: text, reason: requires-escaping-and-editorial-review}
+      images: {type: media, reason: requires-license-and-metadata-validation}
+      urlState: {type: object, reason: attacker-controlled}
+  outputSchema:
+    components: {itemFields: [path, role, states, keyboardModel, accessibleNameSource, responsiveRules]}
+    routes: {itemFields: [path, title, loading, empty, error, unauthorized, notFound, canonicalState, responsiveState]}
+    evidence: {fields: [unitTests, interactionTests, axeResults, keyboardChecklist, viewportResults]}
+  permissions:
+    allowedTools: [filesystem-read, scoped-write, formatter, typecheck, unit-test, browser-test, accessibility-audit]
+    readScopes: ["<repositoryRoot>/src/**", "<repositoryRoot>/public/**", "<repositoryRoot>/tests/**"]
+    writeScopes: ["<ownedPaths>"]
+    forbiddenSideEffects:
+      - raw HTML injection, unsafe URL schemes, client-only authorization, or client-authoritative price
+      - copying reference-site layout, CSS, assets, brand marks, or distinctive copy
+      - dependency installation, analytics addition, or API/schema mutation outside the approved slice
+      - focus traps without escape, color-only meaning, or motion without reduced-motion handling
+      - exposing email, auth identifiers, guest contact details, IP/device data, moderation notes, or raw leaderboard evidence
+      - presenting contributors as sellers or exposing contributor pricing, payout, commission, tax, or KYC controls
+      - placing server-only environment variables, Blob credentials, database URLs, webhook secrets, or CRON_SECRET in client components or browser bundles
+  workflow:
+    - Map route and component states before coding, including loading, empty, error, unauthorized, and already-entitled.
+    - Implement URL-backed q/category/author discovery and viewed/liked/new rails with stable cards, explicit result context, and useful no-result recovery.
+    - Build preview-safe cards and an accessible quick-view dialog with focus management, canonical detail links, price/free labels, and no prefetch of protected bodies.
+    - Implement copy, share, favorite, vote, and report feedback with server-confirmed state, idempotent retry, disabled/pending/error states, and sign-in continuation where required.
+    - Build authenticated-member free-submission UX with image requirements, upload progress, safe preview, moderation status, changes/rejection reason, edit/resubmit or support path, and an explicit statement that submission creates no sale or payout right.
+    - Hide or deny guest submission by default; when the separately approved parity flag is enabled, label the conditional path, preserve verified ownership/abuse/privacy controls, and never imply seller, pricing, payout, or broader account authority.
+    - Prefer authorized direct client upload into private quarantine for contributor media; handle the current 3 MB policy and 4.5 MB function request limit explicitly, never rendering a raw private Blob URL.
+    - Build sign-up, sign-in, verification, reset/recovery, sign-out, session-expiry, favorites/library, public contributor profile, privacy-safe leaderboard, and editor-authorized blog states from server contracts.
+    - Use semantic HTML and native controls; add ARIA only where native semantics cannot express behavior.
+    - Preserve visible focus, logical DOM/tab order, labeled fields, error association, and focus restoration.
+    - Render price and entitlement from server responses; sanitize text/URLs and never expose protected prompt bodies before authorization.
+    - Implement deterministic light/dark/system theme without protected-state flash, mobile-first responsive layouts, zoom/reflow, contrast, target size, reduced motion, and stable loading dimensions.
+    - Make floating actions non-obscuring, keyboard reachable, safe-area aware, dismissible where persistent, and equivalent to non-floating actions.
+    - Test keyboard and screen-reader names plus automated accessibility and supported viewports.
+  timeoutRetry:
+    timeoutSeconds: 900
+    maxAttempts: 2
+    retryOn: [browser-startup, flaky-screenshot]
+    neverRetryOn: [scope-escape, accessibility-critical, unsafe-rendering]
+  acceptanceTests:
+    - Primary journeys work with keyboard only and focus remains visible and predictable.
+    - Automated audit has zero serious/critical violations, with documented manual checks.
+    - At 320 CSS pixels and 200 percent zoom, content reflows without loss of action or information.
+    - Forms announce labels/errors; dialogs name themselves, trap intentionally, close, and restore focus.
+    - Unauthorized users cannot receive protected content in HTML, state hydration, logs, or prefetch payloads.
+    - Displayed checkout price matches the server response and cannot be altered into a trusted charge.
+    - Discovery parameters, rail state, quick view, and engagement controls remain usable across supported breakpoints and assistive technologies.
+    - Auth failures do not enumerate accounts; sign-in continuation is same-origin and restores the intended safe action.
+    - Public profiles and leaderboard render only approved handles and thresholded aggregates; privacy/private status is respected.
+    - Theme and floating controls preserve contrast, focus, reflow, reduced motion, safe areas, and access to underlying content.
+    - Native Next.js preview rendering matches production runtime behavior while preview uses only isolated non-production data, stores, endpoints, and server-side secrets.
+  rollback:
+    strategy: revert-owned-ui-files-or-disable-route-flag
+    verification: previous routes render and API contracts remain backward compatible.
+  telemetry:
+    events: [ui.rendered, ui.error, a11y.audit, protected.action, skill.completed]
+    fields: [taskId, routeTemplate, componentName, state, violationCountBySeverity, durationMs, outcome]
+    redact: [freeText, promptContent, fullUrlQuery, userId, sessionData, screenshotsWithPersonalData]

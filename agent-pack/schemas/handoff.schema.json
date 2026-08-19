@@ -1,0 +1,969 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aliprompt.local/agent-pack/handoff/1.0.0",
+  "title": "Agent Work Handoff",
+  "description": "A strict, evidence-backed contract for transferring repository work between owners without transferring hidden authority or assumptions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "handoffVersion",
+    "handoffId",
+    "createdAt",
+    "objective",
+    "scope",
+    "repository",
+    "repoEvidence",
+    "ownership",
+    "decisions",
+    "trustBoundaries",
+    "changes",
+    "tests",
+    "acceptance",
+    "security",
+    "risks",
+    "rollback",
+    "nextOwner",
+    "approvals"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "handoffVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonically increasing revision of this handoff."
+    },
+    "handoffId": {
+      "type": "string",
+      "pattern": "^HO-[A-Za-z0-9][A-Za-z0-9._-]{2,63}$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "objective": {
+      "$ref": "#/$defs/objective"
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    },
+    "repository": {
+      "$ref": "#/$defs/repository"
+    },
+    "repoEvidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "ownership": {
+      "$ref": "#/$defs/ownership"
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/decision"
+      }
+    },
+    "trustBoundaries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/trustBoundary"
+      }
+    },
+    "changes": {
+      "$ref": "#/$defs/changes"
+    },
+    "tests": {
+      "$ref": "#/$defs/tests"
+    },
+    "acceptance": {
+      "$ref": "#/$defs/acceptance"
+    },
+    "security": {
+      "$ref": "#/$defs/security"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/risk"
+      }
+    },
+    "rollback": {
+      "$ref": "#/$defs/rollback"
+    },
+    "nextOwner": {
+      "$ref": "#/$defs/nextOwner"
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/approval"
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._-]{1,63}$"
+    },
+    "agentId": {
+      "enum": [
+        "orchestrator",
+        "product-owner",
+        "cleanroom-reference-analyst",
+        "platform-product-architect",
+        "domain-data-engineer",
+        "frontend-ux-engineer",
+        "commerce-security-engineer",
+        "catalog-seo-trust-engineer",
+        "qa-release-reviewer"
+      ]
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "not": {
+        "pattern": "(^|[/\\\\])\\.\\.([/\\\\]|$)"
+      }
+    },
+    "stringList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      }
+    },
+    "objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "businessReason",
+        "desiredOutcomes"
+      ],
+      "properties": {
+        "summary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "businessReason": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "desiredOutcomes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "included",
+        "excluded",
+        "assumptions",
+        "constraints"
+      ],
+      "properties": {
+        "included": {
+          "$ref": "#/$defs/stringList"
+        },
+        "excluded": {
+          "$ref": "#/$defs/stringList"
+        },
+        "assumptions": {
+          "$ref": "#/$defs/stringList"
+        },
+        "constraints": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "vcs",
+        "branch",
+        "baselineCommit",
+        "headCommit",
+        "workingTree",
+        "unrelatedChangesPresent",
+        "concurrentEditorsPresent"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/path"
+        },
+        "vcs": {
+          "enum": [
+            "git",
+            "none",
+            "unknown"
+          ]
+        },
+        "branch": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "baselineCommit": {
+          "type": "string",
+          "pattern": "^([0-9a-fA-F]{7,64}|unborn|not-applicable)$"
+        },
+        "headCommit": {
+          "type": "string",
+          "pattern": "^([0-9a-fA-F]{7,64}|unborn|not-applicable)$"
+        },
+        "workingTree": {
+          "enum": [
+            "clean",
+            "dirty",
+            "unknown"
+          ]
+        },
+        "unrelatedChangesPresent": {
+          "type": "boolean"
+        },
+        "concurrentEditorsPresent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "source",
+        "capturedAt",
+        "summary",
+        "redacted"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "command-output",
+            "file",
+            "diff",
+            "test-report",
+            "security-report",
+            "screenshot",
+            "log",
+            "url",
+            "manual-observation"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "capturedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^(sha256:)?[0-9a-fA-F]{64}$"
+        },
+        "summary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "redacted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "role",
+        "responsibility"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/agentId"
+        },
+        "role": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "responsibility": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currentOwner",
+        "contributors",
+        "responsibilityMap"
+      ],
+      "properties": {
+        "currentOwner": {
+          "$ref": "#/$defs/owner"
+        },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/owner"
+          }
+        },
+        "responsibilityMap": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "area",
+              "ownerId"
+            ],
+            "properties": {
+              "area": {
+                "$ref": "#/$defs/nonEmptyString"
+              },
+              "ownerId": {
+                "$ref": "#/$defs/agentId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "status",
+        "context",
+        "optionsConsidered",
+        "choice",
+        "rationale",
+        "consequences",
+        "ownerId",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "accepted",
+            "superseded",
+            "rejected"
+          ]
+        },
+        "context": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "optionsConsidered": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "choice": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "rationale": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "consequences": {
+          "$ref": "#/$defs/stringList"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "trustBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "destination",
+        "data",
+        "classification",
+        "authentication",
+        "authorization",
+        "validation",
+        "controls",
+        "failureModes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "source": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "destination": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "data": {
+          "$ref": "#/$defs/stringList"
+        },
+        "classification": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted",
+            "mixed"
+          ]
+        },
+        "authentication": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "authorization": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "validation": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "controls": {
+          "$ref": "#/$defs/stringList"
+        },
+        "failureModes": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "fileChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "ownerId",
+        "rationale",
+        "userImpact",
+        "securityImpact"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "kind": {
+          "enum": [
+            "added",
+            "modified",
+            "deleted",
+            "renamed",
+            "generated"
+          ]
+        },
+        "ownerId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "rationale": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "userImpact": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "securityImpact": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "changes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "changeSetVersion",
+        "summary",
+        "files",
+        "behaviorChanges",
+        "dataMigrations",
+        "configurationChanges",
+        "dependencyChanges"
+      ],
+      "properties": {
+        "changeSetVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "summary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fileChange"
+          }
+        },
+        "behaviorChanges": {
+          "$ref": "#/$defs/stringList"
+        },
+        "dataMigrations": {
+          "$ref": "#/$defs/stringList"
+        },
+        "configurationChanges": {
+          "$ref": "#/$defs/stringList"
+        },
+        "dependencyChanges": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "testExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "layer",
+        "commandOrProcedure",
+        "status",
+        "summary",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "layer": {
+          "enum": [
+            "static",
+            "unit",
+            "integration",
+            "contract",
+            "end-to-end",
+            "security",
+            "accessibility",
+            "performance",
+            "manual"
+          ]
+        },
+        "commandOrProcedure": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-run"
+          ]
+        },
+        "summary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executions",
+        "coverageSummary",
+        "untestedAreas"
+      ],
+      "properties": {
+        "executions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/testExecution"
+          }
+        },
+        "coverageSummary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "untestedAreas": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "requirement",
+        "status",
+        "evidenceRefs",
+        "notes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "requirement": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-run",
+            "not-applicable"
+          ]
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criteriaVersion",
+        "criteria",
+        "overallStatus",
+        "blockingCriteria"
+      ],
+      "properties": {
+        "criteriaVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "criteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/criterion"
+          }
+        },
+        "overallStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "partial"
+          ]
+        },
+        "blockingCriteria": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "securityFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "severity",
+        "status",
+        "description",
+        "affectedAssets",
+        "mitigation",
+        "ownerId",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low",
+            "informational"
+          ]
+        },
+        "status": {
+          "enum": [
+            "open",
+            "mitigated",
+            "accepted",
+            "false-positive"
+          ]
+        },
+        "description": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "affectedAssets": {
+          "$ref": "#/$defs/stringList"
+        },
+        "mitigation": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewStatus",
+        "threatModelVersion",
+        "secretScanStatus",
+        "personalDataHandling",
+        "contentProtection",
+        "findings",
+        "knownLimitations"
+      ],
+      "properties": {
+        "reviewStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "blocked",
+            "not-run"
+          ]
+        },
+        "threatModelVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "secretScanStatus": {
+          "enum": [
+            "passed",
+            "failed",
+            "not-run"
+          ]
+        },
+        "personalDataHandling": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "contentProtection": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/securityFinding"
+          }
+        },
+        "knownLimitations": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "likelihood",
+        "impact",
+        "severity",
+        "mitigation",
+        "trigger",
+        "ownerId",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "description": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "likelihood": {
+          "enum": [
+            "rare",
+            "unlikely",
+            "possible",
+            "likely",
+            "almost-certain"
+          ]
+        },
+        "impact": {
+          "enum": [
+            "negligible",
+            "minor",
+            "moderate",
+            "major",
+            "severe"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "mitigation": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "trigger": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "status": {
+          "enum": [
+            "open",
+            "monitoring",
+            "mitigated",
+            "accepted",
+            "closed"
+          ]
+        }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "supported",
+        "ownerId",
+        "strategy",
+        "prerequisites",
+        "steps",
+        "dataRecovery",
+        "validation",
+        "irreversibleItems",
+        "estimatedMinutes"
+      ],
+      "properties": {
+        "supported": {
+          "type": "boolean"
+        },
+        "ownerId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "strategy": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "prerequisites": {
+          "$ref": "#/$defs/stringList"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "dataRecovery": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "validation": {
+          "$ref": "#/$defs/stringList"
+        },
+        "irreversibleItems": {
+          "$ref": "#/$defs/stringList"
+        },
+        "estimatedMinutes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "nextOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "requestedActions",
+        "dependencies",
+        "blockingQuestions",
+        "approvalRequired"
+      ],
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/owner"
+        },
+        "requestedActions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "dependencies": {
+          "$ref": "#/$defs/stringList"
+        },
+        "blockingQuestions": {
+          "$ref": "#/$defs/stringList"
+        },
+        "approvalRequired": {
+          "type": "boolean"
+        }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "approverId",
+        "role",
+        "scope",
+        "decision",
+        "conditions",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "approverId": {
+          "$ref": "#/$defs/agentId"
+        },
+        "role": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "scope": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "decision": {
+          "enum": [
+            "approved",
+            "rejected",
+            "changes-requested",
+            "pending"
+          ]
+        },
+        "conditions": {
+          "$ref": "#/$defs/stringList"
+        },
+        "evidenceRefs": {
+          "$ref": "#/$defs/stringList"
+        },
+        "decidedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

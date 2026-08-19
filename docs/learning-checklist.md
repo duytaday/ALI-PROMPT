@@ -39,3 +39,11 @@ Tài liệu này theo dõi những điều chủ dự án cần hiểu và có t
 ## Bằng chứng đã hiểu
 
 Ghi lại câu trả lời, quyết định hoặc ví dụ do chủ dự án tự diễn đạt trong các buổi rà soát. Không đánh dấu chỉ vì đã đọc tài liệu.
+
+## Cổng 4 — Hiểu quy trình GitHub → Vercel
+
+- [ ] Phân biệt được commit local, push lên GitHub và deploy lên Vercel.
+- [ ] Giải thích được vì sao không commit `.env`, token hoặc `.vercel/`.
+- [ ] Biết GitHub không tự cấp biến môi trường cho Vercel; mỗi môi trường phải cấu hình riêng.
+- [ ] Biết Preview cần được kiểm thử và chấp nhận trước khi deploy Production.
+- [ ] Biết cách xác nhận branch, commit SHA và deployment URL đang được kiểm thử.

@@ -1,0 +1,83 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: schema-migration
+  version: 1.2.0
+spec:
+  purpose: Evolve marketplace data safely, including reconciled Drizzle SQLite/D1-to-Postgres migration, with expand-migrate-contract changes and deterministic constraints.
+  triggers:
+    - a slice adds or changes persistent entities, indexes, relations, or status values
+    - commerce or entitlement invariants require database enforcement
+    - a backfill or data transformation is required
+  ownership:
+    owner: domain-data-engineer
+    allowedAgents: [domain-data-engineer, commerce-security-engineer, qa-release-reviewer]
+  inputs:
+    trusted:
+      approvedDataContract: {type: object, fields: [entities, fields, constraints, transitions, publicProjections, retention], required: true}
+      migrationFramework: {type: repository-evidence, required: true}
+      databaseEngineVersion: {type: semver, required: true}
+      targetDatabaseContract: {const: provider-neutral-postgres-via-vercel-marketplace, required: true}
+      ownedPaths: {type: array<repository-path>, required: true}
+    untrusted:
+      productionRows: {type: records, reason: may-contain-personal-or-malformed-data}
+      adHocSql: {type: sql, reason: requires-review-and-bounded-execution}
+  outputSchema:
+    migrationPlan:
+      fields: [id, expand, backfill, cutover, contract, locks, estimatedDuration, rollback]
+    artifacts:
+      itemFields: [path, purpose, checksum, generatedBy]
+    verification:
+      fields: [freshApply, upgradeApply, compatibility, constraints, queryPlan, rollbackDrill]
+  permissions:
+    allowedTools: [filesystem-read, rg, migration-generate, migration-dry-run, local-database, test-runner, scoped-write]
+    readScopes: ["<repositoryRoot>/migrations/**", "<repositoryRoot>/schema/**", "<repositoryRoot>/src/**", "<repositoryRoot>/tests/**"]
+    writeScopes: ["<ownedPaths>"]
+    forbiddenSideEffects:
+      - connecting to or mutating production, shared staging, or an unapproved database
+      - destructive drop, rename, type narrowing, table rewrite, or unbounded backfill in one release
+      - editing an already-applied migration
+      - logging row values, credentials, payment payloads, or personal data
+      - deleting or treating D1/SQLite as retired before Postgres schema/data reconciliation, cutover observation, rollback proof, and explicit retirement approval
+      - sharing preview and production databases, connection strings, migration credentials, or imported datasets
+  workflow:
+    - Confirm file lease, engine version, backup/restore owner, row-volume estimate, and compatibility window.
+    - Freeze a consistent D1/SQLite source snapshot and Drizzle schema/migration manifest; provision an environment-scoped provider-neutral Postgres target through Vercel Marketplace.
+    - Map SQLite-to-Postgres types and semantics explicitly, including booleans, integer widths, timestamps/time zones, JSON, IDs, defaults, generated values, nullability, collations, indexes, foreign keys, uniqueness, transaction/isolation behavior, and SQL differences.
+    - Specify canonical fields and constraints; money uses integer minor units plus ISO currency.
+    - "Model the fixed topology: ALIPROMPT is the only commerce seller; authenticated-member contribution records are free-only moderation candidates, never seller accounts; optional guest rows require an explicit parity-flag provenance record."
+    - Separate private identity/contact/abuse evidence from public handles, contributor profiles, published prompts, aggregate leaderboard rows, and blog projections.
+    - Expand with nullable/new structures and concurrent/nonblocking indexes where supported.
+    - Backfill in resumable, idempotent batches with checkpoint, rate limit, and invariant counters.
+    - Reconcile per-table counts, primary/foreign key sets, canonical row hashes, uniqueness, orphan checks, status distributions, order/payment/entitlement ledgers, moderation transitions, and representative business-query results without logging row data.
+    - Dual-read/write only when necessary; cut over behind a reversible feature flag.
+    - Add uniqueness for provider event IDs, checkout idempotency keys, user-product entitlements, account identities, user-prompt favorites/votes, view-event deduplication keys, reports, submission idempotency keys, normalized public handles, and moderation transitions where required.
+    - Enforce exactly draft, pending_moderation, changes_requested, rejected, and published for contributor submissions, with draft to pending_moderation, pending_moderation to changes_requested/rejected/published, and changes_requested to draft; enforce zero price and reject payout, commission, KYC, or vendor-tenancy relations.
+    - Add bounded indexed access paths for q/category/author discovery, viewed/liked/new rails, favorites/library, profiles, moderation queues, blog status, and privacy-thresholded leaderboard windows.
+    - Validate fresh and prior-version upgrades; contract old fields only in a later approved release.
+  timeoutRetry:
+    timeoutSeconds: 1200
+    maxAttempts: 2
+    retryOn: [local-database-startup, transient-lock-in-test]
+    neverRetryOn: [data-loss-risk, checksum-drift, constraint-violation, production-target]
+  acceptanceTests:
+    - Migration applies from empty schema and every supported prior schema.
+    - Drizzle generates and applies the intended Postgres schema without silently retaining SQLite-only semantics or destructive drift.
+    - D1/SQLite export and Postgres import are resumable and reconcile counts, key sets, hashes, relationships, constraints, ledgers, moderation states, and sampled queries to declared zero/approved tolerances.
+    - Old and new application versions coexist for the declared compatibility window.
+    - Duplicate payment events, checkout keys, and entitlements are rejected deterministically.
+    - Duplicate favorites, votes, reports, views, submissions, and moderation commands converge under documented idempotency and rate policies.
+    - Public projections cannot join to email, auth subject, IP/device signals, guest contact, moderation notes, or raw abuse evidence.
+    - Community contribution rows are zero-price and cannot create seller, payout, commission, tax-beneficiary, or KYC state.
+    - Launch schema/API paths deny guest submission by default; any optional guest submission records prove approved flag version, ownership verification, environment, expiry, and privacy/abuse policy without weakening member or seller isolation.
+    - Backfill is resumable and produces only aggregate redacted verification counters.
+    - Lock/query-plan checks meet the approved threshold and rollback drill succeeds locally.
+    - Preview and production Postgres bindings, data, credentials, migration history, and checkpoints are isolated; rollback retains the legacy snapshot and a deterministic divergence-reconciliation plan.
+  rollback:
+    strategy: prefer-forward-fix-after-expand
+    steps: [disable-feature-flag, stop-backfill, revert-application-read-path, restore-from-approved-backup-if-data-loss]
+    prohibition: Never run destructive down migration on production without R3 human authorization.
+  telemetry:
+    events: [migration.planned, dryrun.started, batch.completed, invariant.failed, migration.verified]
+    fields: [taskId, migrationId, schemaVersion, batchCount, rowsAffectedCount, durationMs, outcome]
+    redact: [rowValues, connectionStrings, credentials, paymentData, personalData]

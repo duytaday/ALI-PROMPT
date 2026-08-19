@@ -1,0 +1,1 @@
+ALTER TABLE "prompts" ADD COLUMN "guest_author_name" varchar(120);

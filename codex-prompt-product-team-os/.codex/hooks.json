@@ -1,0 +1,96 @@
+{
+  "description": "Project lifecycle hooks for context, secret prevention, ownership warnings, handoff structure, and quality gates.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/session_context.py\"",
+            "commandWindows": "py -3 \".codex/hooks/session_context.py\"",
+            "statusMessage": "Loading project context",
+            "additionalContextLimit": 5000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/prompt_guard.py\"",
+            "commandWindows": "py -3 \".codex/hooks/prompt_guard.py\"",
+            "statusMessage": "Checking prompt safety and task context"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_context.py\"",
+            "commandWindows": "py -3 \".codex/hooks/subagent_context.py\"",
+            "statusMessage": "Loading subagent ownership boundary",
+            "additionalContextLimit": 3000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_policy.py\"",
+            "commandWindows": "py -3 \".codex/hooks/pre_tool_policy.py\"",
+            "statusMessage": "Checking command and write policy",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_stop_gate.py\"",
+            "commandWindows": "py -3 \".codex/hooks/subagent_stop_gate.py\"",
+            "statusMessage": "Checking subagent handoff",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/stop_quality_gate.py\"",
+            "commandWindows": "py -3 \".codex/hooks/stop_quality_gate.py\"",
+            "statusMessage": "Running configured quality gates",
+            "timeout": 900
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/session_end_log.py\"",
+            "commandWindows": "py -3 \".codex/hooks/session_end_log.py\"",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}

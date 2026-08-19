@@ -1,0 +1,168 @@
+apiVersion: agentpack.aliprompt/v1
+kind: ModelRoutingPolicy
+metadata:
+  name: aliprompt-token-efficient-model-router
+  version: 1.0.0
+  resolvedAt: 2026-08-17
+  status: recommended-baseline-requires-evals
+spec:
+  officialGuidance:
+    resolverTarget: gpt-5.6-sol
+    modelGuide: https://developers.openai.com/api/docs/guides/latest-model
+    modelCatalog: https://developers.openai.com/api/docs/models
+    rule: Re-check official guidance and runtime availability before changing model IDs, reasoning fields, limits, or API behavior.
+
+  family:
+    frontier:
+      model: gpt-5.6-sol
+      useFor: [hard-architecture, security, payment-integrity, data-migration, complex-debugging, cross-domain-synthesis, release-verdict]
+    balanced:
+      model: gpt-5.6-terra
+      useFor: [default-product-work, routine-coding, frontend, tests, documentation, ordinary-review, orchestration]
+    economy:
+      model: gpt-5.6-luna
+      useFor: [classification, extraction, inventory, deduplication, formatting, high-volume-low-risk-work]
+    unavailableFallback:
+      gpt-5.6-luna: {model: gpt-5.6-terra, reasoningEffort: low}
+      rule: Never invent an unavailable model. Verify the current surface; the present Codex subagent surface may expose Sol and Terra but not Luna.
+
+  deterministicFirst:
+    enabled: true
+    noModelTasks:
+      - schema validation
+      - exact counting and uniqueness checks
+      - sorting, filtering, hashing, checksums, and deterministic joins
+      - formatting and repository-native lint/type/test/build commands
+      - state-transition, price, entitlement, authorization, and migration execution logic
+    rule: Use deterministic code and authoritative server data when judgment is not required; never spend model tokens to re-compute a deterministic fact.
+
+  routingHeuristic:
+    advisoryOnly: true
+    scoreDimensions:
+      complexity: {min: 0, max: 3}
+      securityOrPrivacyImpact: {min: 0, max: 3}
+      blastRadius: {min: 0, max: 3}
+      ambiguity: {min: 0, max: 2}
+      crossDomainCoupling: {min: 0, max: 2}
+      irreversibility: {min: 0, max: 3}
+    routes:
+      - when: deterministic-and-no-semantic-judgment
+        target: no-model
+      - when: total-score-0-through-3
+        target: gpt-5.6-luna
+        reasoningEffort: low
+      - when: total-score-4-through-7
+        target: gpt-5.6-terra
+        reasoningEffort: medium
+      - when: total-score-8-or-more
+        target: gpt-5.6-sol
+        reasoningEffort: high
+    hardOverrides:
+      gpt-5.6-sol:
+        - payment, refund, entitlement, or protected-paid-content correctness
+        - authentication or authorization architecture and critical security review
+        - destructive or production data migration and rollback design
+        - cross-domain architecture decision with difficult-to-reverse consequences
+        - unresolved blocker after two evidence-backed lower-tier attempts
+        - final S7 integration and release-blocker review
+    rule: Scores route work; they never grant authority. Product, security, file ownership, sprint, and Production approval gates still apply.
+
+  roleDefaults:
+    product-owner:
+      default: {model: gpt-5.6-terra, reasoningEffort: medium, budgetClass: standard}
+      escalate: {model: gpt-5.6-sol, reasoningEffort: high, for: [product-mode-conflict, high-impact-priority, S0-contract-acceptance, S7-go-no-go]}
+    orchestrator:
+      default: {model: gpt-5.6-terra, reasoningEffort: medium, budgetClass: standard}
+      escalate: {model: gpt-5.6-sol, reasoningEffort: high, for: [cross-domain-plan, dependency-deadlock, difficult-integration, release-synthesis]}
+    cleanroom-reference-analyst:
+      default: {model: gpt-5.6-luna, reasoningEffort: low, budgetClass: bulk}
+      fallback: {model: gpt-5.6-terra, reasoningEffort: low}
+      escalate: {model: gpt-5.6-terra, reasoningEffort: medium, for: [ambiguous-capability-synthesis]}
+    platform-product-architect:
+      default: {model: gpt-5.6-sol, reasoningEffort: high, budgetClass: complex}
+      reserveMaxFor: [measured-hard-architecture-failure]
+    domain-data-engineer:
+      default: {model: gpt-5.6-terra, reasoningEffort: medium, budgetClass: standard}
+      escalate: {model: gpt-5.6-sol, reasoningEffort: high, for: [dialect-migration, financial-ledger, concurrency, destructive-rollback]}
+    frontend-ux-engineer:
+      default: {model: gpt-5.6-terra, reasoningEffort: medium, budgetClass: standard}
+      escalate: {model: gpt-5.6-sol, reasoningEffort: medium, for: [design-system-synthesis, complex-SSR-hydration, critical-accessibility]}
+    commerce-security-engineer:
+      default: {model: gpt-5.6-sol, reasoningEffort: high, budgetClass: complex}
+      reserveMaxFor: [measured-critical-integrity-failure]
+    catalog-seo-trust-engineer:
+      default: {model: gpt-5.6-terra, reasoningEffort: medium, budgetClass: standard}
+      economy: {model: gpt-5.6-luna, reasoningEffort: low, for: [bounded-classification, extraction, deduplication]}
+    qa-release-reviewer:
+      default: {model: gpt-5.6-terra, reasoningEffort: medium, budgetClass: standard}
+      escalate: {model: gpt-5.6-sol, reasoningEffort: high, for: [security-release-blocker, payment-integrity, migration-verdict, S7-final-review]}
+
+  reasoningPolicy:
+    default: medium
+    latencyOrBulk: low
+    qualityCritical: high
+    xhighOrMax:
+      allowedOnlyWhen: Representative evals show a material quality gain or a hard task remains unresolved after a correct lower-effort attempt.
+      forbiddenAsGlobalDefault: true
+    proMode:
+      default: disabled
+      allowedOnlyWhen: A quality-first task has clear evaluation criteria and measured benefit justifies extra latency and tokens.
+    retryRule:
+      - Do not repeat the same model, prompt, context, and effort after a failure without changing the diagnosed cause.
+      - After one correctable failure, fix context or success criteria before raising effort.
+      - After two evidence-backed failures, escalate one tier or hand off to the specialized Sol role.
+
+  tokenPolicy:
+    stablePrefix:
+      include: [active-contract-capsule, role-contract, current-sprint-invariants, output-schema]
+      exclude: [timestamps, request-ids, raw-logs, unrelated-files, repeated-history, dynamic-user-data]
+      cacheWhenSupported: true
+    contextSelection:
+      - Retrieve relevant paths and line ranges instead of attaching the whole repository.
+      - Give a subagent one role prompt, one bounded work order, current sprint acceptance, necessary interfaces, and predecessor evidence only.
+      - Store logs and artifacts in the repository; send IDs, paths, hashes, and small decisive excerpts.
+      - Use delta context after the first turn: changed decisions, files, failing criteria, and new evidence.
+      - Start a new task or compact context when the objective changes; preserve reasoning only while goals and assumptions remain stable.
+    budgetClasses:
+      bulk:
+        targetMaxOutputTokens: 800
+        textVerbosity: low
+        response: structured-result-only
+      standard:
+        targetMaxOutputTokens: 1800
+        textVerbosity: low
+        response: conclusion-evidence-risk-next-action
+      complex:
+        targetMaxOutputTokens: 3500
+        textVerbosity: medium
+        response: decision-alternatives-evidence-tests-rollback
+      release:
+        targetMaxOutputTokens: 5000
+        textVerbosity: medium
+        response: verdict-evidence-matrix-blockers-approvals-rollback
+    outputRules:
+      - Lead with the result; omit narration, generic reassurance, repeated instructions, and hidden reasoning.
+      - Use structured outputs and exact schemas for work orders, handoffs, reviews, and eval results.
+      - Preserve decisions, critical caveats, evidence, failures, approvals, and next action before optional background.
+      - Never truncate a required 19-key handoff to meet a soft budget; write the artifact to disk and return its path plus verdict.
+
+  multiAgentPolicy:
+    maxConcurrentSubagents: 3
+    spawnOnlyWhen: Workstreams are independent, bounded, non-overlapping, and cheaper than loading one model with all domains.
+    denyWhen: [duplicate-analysis, overlapping-write-paths, missing-synthesis-owner, tiny-task, same-evidence-re-read-without-purpose]
+    contextRule: Each subagent receives the minimum role-specific capsule; only the orchestrator receives all compact handoffs.
+
+  evaluation:
+    compare:
+      - assigned-tier at baseline reasoning
+      - same tier one reasoning level lower
+      - next cheaper tier when quality remains acceptable
+      - Sol escalation only for measured failure or hard override
+    metrics:
+      - task success and acceptance pass rate
+      - input, cached-input, output, and reasoning tokens
+      - cost per accepted task
+      - latency, retries, and tool-call count
+      - schema validity and evidence completeness
+      - escaped defects and reviewer disagreement
+    promotionRule: Change a role default only after representative S0-S7 eval cases show equal or better acceptance with lower token/cost use and no critical regression.

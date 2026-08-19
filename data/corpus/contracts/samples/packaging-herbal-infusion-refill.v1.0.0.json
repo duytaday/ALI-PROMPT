@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "1.0.0",
+  "corpusRunId": "data10k-g0-reference-20260819",
+  "promptKey": "data10k:packaging-design:0001",
+  "slug": "modular-herbal-infusion-refill-packaging",
+  "categorySlug": "packaging-design",
+  "promptVersion": "1.0.0",
+  "lifecycleState": "g0_reference",
+  "contentLanguage": "multilingual",
+  "localizations": {
+    "vi": {
+      "title": "Bao bì túi trà thảo mộc dạng nạp lại theo mô-đun",
+      "summary": "Tạo hệ bao bì nguyên bản cho trà thảo mộc hư cấu, làm rõ cấu trúc nạp lại, phân cấp thông tin và cảm giác vật liệu trên kệ.",
+      "usageInstructions": "Thay các biến bằng loại sản phẩm, hai màu chủ đạo, vật liệu và tỉ lệ khung mong muốn. Chỉ dùng tên mô tả chung; bổ sung chữ thật trong công cụ dàn trang sau khi tạo hình thay vì yêu cầu mô hình dựng nhãn pháp lý.",
+      "promptTemplate": "Thiết kế một hình ảnh trình bày bao bì nguyên bản cho {{productForm}} đựng trà thảo mộc hư cấu. Mục tiêu là cho thấy hệ nạp lại dễ hiểu: hộp chính đứng bên trái, gói nạp mềm thấp hơn ở bên phải và một cụm lá khô nhỏ tạo ngữ cảnh nhưng không che sản phẩm. Dùng {{primaryHue}} làm màu nền chính, {{accentHue}} cho mã phân loại, vật liệu {{material}}, ánh sáng studio tán xạ và bóng đổ ngắn. Phân cấp thị giác: hình khối bao bì trước, vùng nhãn trống thứ hai, dấu hiệu nạp lại thứ ba. Tỉ lệ {{aspectRatio}}, chừa khoảng an toàn quanh mép. Không logo, không thương hiệu thật, không mã vạch, không chứng nhận, không tuyên bố sức khỏe, không chữ ngẫu nhiên, không watermark và không mô phỏng kiểu dáng bao bì đang lưu hành."
+    },
+    "en": {
+      "title": "Modular refill packaging for a fictional herbal infusion",
+      "summary": "Create an original packaging system for a fictional herbal infusion, making refill structure, information hierarchy, and shelf materiality immediately clear.",
+      "usageInstructions": "Replace the variables with the product format, two lead colors, material, and intended frame ratio. Keep naming generic and add final legal copy in a layout tool after generation instead of asking the image model to fabricate regulated label text.",
+      "promptTemplate": "Design an original packaging presentation for a fictional herbal infusion in a {{productForm}} format. Communicate an easy refill system: place the rigid primary pack upright on the left, a lower soft refill pouch on the right, and a restrained cluster of dried leaves for context without obscuring either pack. Use {{primaryHue}} as the dominant field, {{accentHue}} as a small variant code, {{material}} material cues, diffused studio light, and short soft shadows. Visual hierarchy: package silhouettes first, blank label zone second, refill cue third. Compose at {{aspectRatio}} with generous edge safety. No logos, real brands, barcodes, certifications, health claims, random text, watermarks, or imitation of existing package trade dress."
+    }
+  },
+  "canonicalImagePrompt": "Create a provider-neutral packaging presentation for a fictional herbal infusion using a {{productForm}} primary container and matching refill pouch. Arrange the upright main pack left, the lower refill right, and a restrained dried-leaf context accent. Apply {{primaryHue}} as the dominant field, {{accentHue}} only as a variant cue, and render believable {{material}} surfaces under diffused studio lighting with short soft shadows. Keep the hierarchy on silhouette, then an intentionally blank label zone, then refill communication. Frame at {{aspectRatio}} with safe margins. Exclude logos, real brands, protected trade dress, barcodes, certifications, health claims, readable or random text, watermarks, clutter, and cropped packaging.",
+  "variableDefinitions": [
+    {
+      "name": "productForm",
+      "placeholder": "{{productForm}}",
+      "type": "enum",
+      "required": true,
+      "description": {"vi": "Dạng hộp chứa chính.", "en": "Primary container format."},
+      "default": "folding carton",
+      "demoValue": "folding carton",
+      "examples": ["folding carton", "paper tube", "rigid paper canister"],
+      "allowedValues": ["folding carton", "paper tube", "rigid paper canister"]
+    },
+    {
+      "name": "primaryHue",
+      "placeholder": "{{primaryHue}}",
+      "type": "color",
+      "required": true,
+      "description": {"vi": "Màu nền chiếm ưu thế.", "en": "Dominant background color."},
+      "default": "muted sage green",
+      "demoValue": "muted sage green",
+      "examples": ["muted sage green", "warm oat beige"]
+    },
+    {
+      "name": "accentHue",
+      "placeholder": "{{accentHue}}",
+      "type": "color",
+      "required": true,
+      "description": {"vi": "Màu nhấn dùng tiết chế.", "en": "Restrained accent color."},
+      "default": "soft terracotta",
+      "demoValue": "soft terracotta",
+      "examples": ["soft terracotta", "dusty marigold"]
+    },
+    {
+      "name": "material",
+      "placeholder": "{{material}}",
+      "type": "enum",
+      "required": true,
+      "description": {"vi": "Vật liệu bề mặt bao bì.", "en": "Packaging surface material."},
+      "default": "uncoated recycled paper",
+      "demoValue": "uncoated recycled paper",
+      "examples": ["uncoated recycled paper", "lightly embossed paper"],
+      "allowedValues": ["uncoated recycled paper", "lightly embossed paper", "matte fiber board"]
+    },
+    {
+      "name": "aspectRatio",
+      "placeholder": "{{aspectRatio}}",
+      "type": "aspect_ratio",
+      "required": true,
+      "description": {"vi": "Tỉ lệ khung đầu ra.", "en": "Output frame ratio."},
+      "default": "4:5",
+      "demoValue": "4:5",
+      "examples": ["4:5", "1:1", "16:9"],
+      "allowedValues": ["4:5", "1:1", "16:9"]
+    }
+  ],
+  "usageMetadata": {
+    "useCase": {"vi": "Trình bày định hướng bao bì nạp lại trước khi dàn nhãn chi tiết.", "en": "Present a refill-packaging direction before detailed label layout."},
+    "expectedResult": {"vi": "Một key visual bao bì sạch, nhìn ra ngay hộp chính và gói nạp, có vùng nhãn trống để hoàn thiện bằng công cụ thiết kế.", "en": "A clean packaging key visual with an immediately legible primary/refill relationship and a blank label zone for later design work."},
+    "difficulty": "intermediate",
+    "setupTimeMinutes": 12,
+    "outputType": "packaging",
+    "steps": {
+      "vi": ["Chọn dạng hộp, vật liệu và cặp màu phù hợp với phân khúc hư cấu.", "Tạo hình với bộ biến an toàn rồi kiểm tra silhouette, vùng nhãn và dấu hiệu nạp lại.", "Đưa hình đã duyệt vào công cụ dàn trang để thêm nội dung nhãn thật."],
+      "en": ["Choose the container, material, and color pair for the fictional positioning.", "Generate with the safe variable set and inspect silhouette, label zone, and refill cue.", "Move the approved image into a layout tool to add final verified label content."]
+    }
+  },
+  "designMetadata": {
+    "objective": {"vi": "Truyền đạt hệ bao bì nạp lại dễ hiểu và có tính hệ thống.", "en": "Communicate a clear, systematic refill-packaging proposition."},
+    "deliverable": {"vi": "Key visual trình bày hộp chính và gói nạp cho bảng định hướng thiết kế.", "en": "A primary-pack and refill-pouch key visual for a design direction board."},
+    "subject": {"vi": "Hộp trà thảo mộc hư cấu, gói nạp và một ít lá khô.", "en": "A fictional herbal infusion pack, refill pouch, and restrained dried leaves."},
+    "context": {"vi": "Bối cảnh studio trung tính dành cho duyệt ý tưởng, không phải nhãn bán hàng hoàn chỉnh.", "en": "A neutral concept-review studio setting, not a finished retail label."},
+    "composition": {"vi": "Hộp đứng ở một phần ba trái, gói nạp thấp ở phải, khoảng trống rộng quanh vùng nhãn.", "en": "Upright pack on the left third, lower refill on the right, and generous negative space around label zones."},
+    "visualHierarchy": {"vi": "Hình khối bao bì trước, vùng nhãn trống sau, dấu hiệu nạp lại cuối.", "en": "Package silhouettes first, blank label zone second, refill cue third."},
+    "artDirection": {"vi": "Tối giản ấm áp, hình học rõ, vật liệu giấy chân thực và không vay mượn nhận diện có sẵn.", "en": "Warm minimalism, clear geometry, believable paper material, and no borrowed identity language."},
+    "medium": "photorealistic studio packaging visualization",
+    "lighting": "large diffused key light from upper left with a soft fill and short grounded shadows",
+    "colorPalette": ["muted sage green", "soft terracotta", "warm off-white"],
+    "textureMaterials": ["uncoated recycled paper", "soft matte refill film", "dried botanical texture"],
+    "cameraLens": {"cameraView": "slightly elevated three-quarter front view", "lensOrProjection": "70 mm equivalent", "depthOfField": "moderate depth; both packages fully sharp"},
+    "aspectRatio": "4:5",
+    "typographyConstraints": ["Keep label panels blank for later typesetting", "Do not render pseudo-legal copy or random glyphs"],
+    "negativeConstraints": ["no logos or real brands", "no existing package trade dress", "no barcodes or certifications", "no health claims", "no random text or watermark", "no cropped package edges"]
+  },
+  "modelCompatibility": [
+    {"provider": "Unknown", "model": "Unknown", "status": "Unknown", "evidenceRef": null, "reviewedAt": null}
+  ],
+  "safetyTaxonomy": {
+    "reviewStatus": "pass",
+    "reasonCodes": [],
+    "originalContentDeclared": true,
+    "cleanRoom": true,
+    "riskFlags": {
+      "copyrightCharacter": false,
+      "trademarkTradeDress": false,
+      "publicFigure": false,
+      "privatePersonData": false,
+      "livingArtistImitation": false,
+      "deceptiveDocument": false,
+      "impersonationFraud": false,
+      "unsafeSexual": false,
+      "unsafeViolentHate": false,
+      "regulatedHighRisk": false,
+      "sensitiveTraitInference": false
+    }
+  },
+  "provenance": {
+    "generationSurface": "Codex desktop local architecture task",
+    "generatorModelId": null,
+    "generatorTemplateVersion": "1.0.0",
+    "generatedAt": "2026-08-19T00:00:00Z",
+    "reviewerState": "architect_reference_reviewed",
+    "reviewerId": "data10k-corpus-architect-local",
+    "reviewedAt": "2026-08-19T00:00:00Z",
+    "originalContentDeclaration": "clean-room original; no PromptVN or marketplace content/assets used",
+    "externalSourceMaterials": []
+  },
+  "hashing": {
+    "normalizationVersion": "data10k-normalize-v1",
+    "normalizedContentHash": "68a532ffb53e2c7edfa8cc8cb922427341cd1f210244848589918cd2d1fb5e25",
+    "dedupeCluster": "cluster:packaging-refill-system-001",
+    "semanticClusterMethod": "reference_sample"
+  },
+  "qualityResults": {
+    "rubricVersion": "1.0.0",
+    "deterministic": {"schemaValid": true, "placeholderRoundTripValid": true, "localeCoverageValid": true, "categoryValid": true, "forbiddenTermScanPassed": true, "contentHashValid": true, "exactHashUnique": true},
+    "semantic": {
+      "reviewState": "architect_reference_review",
+      "weightedScore": 98.5,
+      "passThreshold": 80,
+      "passed": true,
+      "dimensions": {"objectiveClarity": 4, "designSpecificity": 4, "compositionHierarchy": 4, "controllability": 4, "outputUsefulness": 4, "localization": 4, "safetyOriginality": 4, "internalConsistency": 4, "uniqueness": 3},
+      "reasonCodes": []
+    }
+  },
+  "demoImage": {
+    "kind": "placeholder_cover",
+    "status": "not_generated",
+    "canonicalVariables": {"productForm": "folding carton", "primaryHue": "muted sage green", "accentHue": "soft terracotta", "material": "uncoated recycled paper", "aspectRatio": "4:5"},
+    "generationPromptHash": null,
+    "provider": null,
+    "model": null,
+    "snapshot": null,
+    "attempt": null,
+    "generatedAt": null,
+    "parameters": {},
+    "width": null,
+    "height": null,
+    "mimeType": null,
+    "bytes": null,
+    "sha256": null,
+    "perceptualHash": null,
+    "blobKey": null,
+    "altText": {"vi": "Bìa giữ chỗ mô tả hộp trà thảo mộc và gói nạp trên nền studio trung tính.", "en": "Placeholder cover describing a herbal infusion carton and refill pouch in a neutral studio."}
+  }
+}

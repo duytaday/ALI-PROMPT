@@ -1,0 +1,75 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: vercel-platform-migration
+  version: 1.2.0
+spec:
+  purpose: Migrate ALIPROMPT from the legacy vinext, Cloudflare, and D1 topology to native Next.js on Vercel with environment isolation, reconciled Postgres data, preview evidence, and reversible cutover.
+  triggers:
+    - native Next.js runtime, Vercel project, deployment, environment, domain, storage, or scheduled work changes
+    - Drizzle SQLite-to-Postgres migration or legacy runtime cutover is planned
+  ownership:
+    owner: platform-product-architect
+    allowedAgents: [orchestrator, platform-product-architect, domain-data-engineer, commerce-security-engineer, frontend-ux-engineer, qa-release-reviewer]
+  inputs:
+    trusted:
+      sprintContext: {type: sprint-envelope, fields: [sprintId, predecessorSprintId, predecessorAcceptance, applicableGates, exitAcceptance, evidenceRefs, reviewerAcceptance], required: true}
+      currentTopology: {type: repository-and-runtime-evidence, fields: [vinext, cloudflare, d1, domains, jobs, bindings, revision], required: true}
+      targetTopology: {const: native-nextjs-on-vercel, required: true}
+      environmentMatrix: {type: object, fields: [development, preview, production, dataBindings, blobStores, webhookEndpoints, cron], required: true}
+      migrationPolicy: {type: versioned-policy, fields: [backup, reconcile, cutover, observationWindow, rollback, retirementApproval], required: true}
+      ownedPaths: {type: array<repository-path>, required: true}
+    untrusted:
+      providerDashboardState: {type: object, reason: mutable-and-environment-sensitive}
+      deploymentMetadata: {type: object, reason: requires-project-environment-and-digest-verification}
+      importedRows: {type: records, reason: may-be-malformed-duplicated-or-private}
+      callbackAndCronRequests: {type: requests, reason: attacker-controlled-until-authenticated}
+  outputSchema:
+    topologyPlan: {fields: [nativeNextEntryPoints, runtimeCompatibility, environmentBindings, providerNeutralPostgres, blobStores, cronJobs, legacyInventory]}
+    dataMigration: {fields: [drizzleSchemaDiff, sqliteSnapshot, postgresTarget, typeMappings, exportManifest, importBatches, reconciliation, rollbackCheckpoint]}
+    deploymentEvidence: {fields: [commit, deploymentId, environment, projectIdHash, artifactDigest, checks, URLs, bindingFingerprints]}
+    cutoverPlan: {fields: [entryCriteria, trafficSteps, observationWindow, healthThresholds, rollbackTrigger, rollbackTarget, legacyRetirementCriteria]}
+  permissions:
+    allowedTools: [filesystem-read, scoped-write, git-diff, build, test-runner, migration-dry-run, local-database, vercel-project-read, vercel-preview-deploy, observability-read]
+    readScopes: ["<repositoryRoot>/**", "<approvedVercelProject>", "<approvedLegacyReadOnlyViews>"]
+    writeScopes: ["<ownedPaths>", "<approvedPreviewProject>"]
+    forbiddenSideEffects:
+      - deleting or irreversibly mutating vinext, Cloudflare, D1, legacy domains, backups, or rollback artifacts before proved cutover and separately approved retirement
+      - production deployment, domain switch, production data write, secret rotation, or legacy retirement without R3 human authorization
+      - coupling application contracts to a vendor-specific Postgres product identity instead of a provider-neutral connection contract
+      - sharing database, Blob store, webhook secret, cron secret, auth secret, payment secret, or mutable cache across preview and production
+      - exposing any credential to browser code, build output, deployment logs, telemetry, or preview comments
+  workflow:
+    - Verify the exact predecessor acceptance before work; bind every artifact and tool call to the functional sprint, collect its applicable-gate evidence, and issue the exit acceptance label only after canonical review.
+    - Limit foundation/configuration and Postgres migration scaffolding to S1; reserve full isolated Preview hardening, migration rehearsal, and production cutover approval for S7.
+    - Inventory native/legacy entrypoints, configuration, bindings, domains, D1 schema/data, Cloudflare jobs/storage, vinext compatibility behavior, and rollback dependencies without mutation.
+    - Establish native Next.js build, routing, server/runtime boundaries, and Vercel configuration; remove vinext assumptions only after equivalent preview tests pass.
+    - Provision provider-neutral Postgres through Vercel Marketplace and bind environment-specific connection variables through a server-only repository adapter.
+    - Translate Drizzle SQLite schema to Postgres deliberately, including integer/boolean/time/JSON semantics, IDs, defaults, generated values, indexes, foreign keys, uniqueness, transactions, and query behavior.
+    - Snapshot and export D1/SQLite consistently; import to Postgres in resumable idempotent batches; reconcile per-table counts, key sets, canonical hashes, foreign keys, unique constraints, financial ledgers, moderation states, and sampled business queries.
+    - Create isolated Vercel preview deployments for the exact commit with preview-only Postgres, Blob stores, callbacks, webhook endpoints, cron disabled or isolated, and no production credentials.
+    - Pass build, route, SSR, auth, upload, moderation, payment sandbox, webhook, data-reconciliation, accessibility, performance, and rollback gates on preview.
+    - Cut over traffic and production bindings in bounded reversible steps; retain legacy read/rollback capability throughout the observation window and trigger rollback on declared health or reconciliation thresholds.
+    - Retire legacy resources only in a later explicitly approved action after parity, reconciliation, observation, backup restore, rollback drill, audit retention, and dependency scans prove they are no longer required.
+  timeoutRetry:
+    timeoutSeconds: 1800
+    maxAttempts: 2
+    retryOn: [preview-capacity, transient-provider-read, resumable-import-batch]
+    retryRequires: [same-sprint-envelope, preserved-first-attempt-evidence, idempotency-key]
+    neverRetryOn: [environment-mismatch, reconciliation-mismatch, secret-leak, artifact-digest-mismatch, destructive-legacy-action]
+  acceptanceTests:
+    - The exact revision runs as native Next.js on an isolated Vercel preview and does not require vinext or Cloudflare compatibility for target behavior.
+    - Postgres is consumed through provider-neutral contracts and is provisioned through Vercel Marketplace with preview/production connection isolation.
+    - Drizzle schema generation, migration, import, and reconciliation prove SQLite/D1 parity for constraints, data, protected commerce ledgers, and moderation states.
+    - Preview contains no production secrets or data and cannot invoke production webhooks, Blob stores, cron jobs, payment effects, or domains.
+    - Signed payment webhooks remain raw-body verified, environment-bound, idempotent, replay-safe, and reconciled after deployment.
+    - Optional cron endpoints require CRON_SECRET, use idempotent distributed locks/checkpoints, and safely reconcile duplicate, overlapping, delayed, or missed invocations.
+    - Cutover rollback restores the previous traffic/runtime/data-read path within the declared objective and no legacy resource is deleted before separate retirement proof and approval.
+  rollback:
+    strategy: restore-legacy-traffic-and-bindings-preserve-both-data-sides
+    steps: [stop-cutover, disable-new-writes-if-needed, restore-legacy-domain-target, restore-known-good-bindings, replay-idempotent-outbox, reconcile-divergence, verify-core-journeys]
+    preserve: [legacy-runtime, d1-snapshot, export-manifest, postgres-checkpoint, deployment-digests, audit-ledgers, webhook-ledger, backups]
+  telemetry:
+    events: [preview.deployed, environment.denied, migration.batch_completed, reconciliation.checked, cutover.started, cutover.rolled_back, legacy.retirement_denied]
+    fields: [taskId, sprintId, predecessorAcceptance, applicableGates, exitAcceptance, commit, environment, deploymentIdHash, migrationId, aggregateCounts, reasonCode, outcome]
+    redact: [connectionStrings, credentials, secrets, productionData, rowValues, webhookBodies, providerTokens, fullUrls]

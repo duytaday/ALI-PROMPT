@@ -1,0 +1,78 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: test-release
+  version: 1.2.0
+spec:
+  purpose: Produce reproducible release evidence, gate risky changes, and execute a reversible rollout.
+  triggers:
+    - a vertical slice is ready for integration or deployment
+    - commerce, auth, schema, search, accessibility, or infrastructure changed
+    - a hotfix or rollback candidate is proposed
+  ownership:
+    owner: qa-release-reviewer
+    allowedAgents: [qa-release-reviewer, commerce-security-engineer, domain-data-engineer, orchestrator]
+  inputs:
+    trusted:
+      approvedPlan: {type: vertical-slice-plan, required: true}
+      baselineCommit: {type: git-oid, required: true}
+      candidateCommit: {type: git-oid, required: true}
+      releaseEnvironment: {enum: [local, ci, preview, staging, production], required: true}
+      sprintContext: {type: sprint-envelope, fields: [sprintId, predecessorSprintId, predecessorAcceptance, applicableGates, exitAcceptance, evidenceRefs, reviewerAcceptance], required: true}
+      approvalRecord: {type: signed-record, required: false}
+    untrusted:
+      testOutput: {type: text, reason: can-be-forged-or-secret-bearing}
+      artifactMetadata: {type: object, reason: requires-signature-verification}
+      runtimeTraffic: {type: events, reason: contains-personal-and-hostile-input}
+  outputSchema:
+    releaseEvidence: {fields: [sprintId, predecessorSprintId, predecessorAcceptance, applicableGates, exitAcceptance, candidateCommit, artifactDigest, environmentBindingDigest, deploymentId, sbomDigest, checks, waivers, approvals, generatedAt]}
+    rolloutPlan: {fields: [strategy, cohorts, healthSignals, thresholds, observationWindow, rollbackCommand, owner]}
+    decision: {fields: [sprintId, applicableGates, exitAcceptance, status, reasonCodes, blockingChecks, reviewedBy, authorizedBy, expiresAt]}
+  permissions:
+    allowedTools: [filesystem-read, git-diff, build, lint, typecheck, test-runner, dependency-audit, artifact-sign, vercel-preview-deploy, staging-deploy, observability-read]
+    readScopes: ["<repositoryRoot>/**", "<approvedObservabilityViews>"]
+    writeScopes: ["<repositoryRoot>/artifacts/release-evidence/**", "<approvedVercelPreviewTarget>", "<approvedStagingTarget>"]
+    forbiddenSideEffects:
+      - changing source to make tests pass, mutating baseline artifacts, or hiding/rewriting failed results
+      - production deploy, database mutation, secret rotation, live payment, or destructive rollback without R3 human authorization
+      - bypassing policy hooks, required review, migration compatibility, or unresolved critical findings
+      - using flaky retry to convert a deterministic failure into success
+      - accepting a sprint exit or dispatching a later sprint without predecessor evidence and independent canonical reviewer acceptance
+      - deleting legacy vinext, Cloudflare, D1, domains, backups, or rollback assets before proved parity/reconciliation/observation and separate retirement approval
+  workflow:
+    - Verify clean candidate, ownership-compliant diff, lockfile consistency, and candidate-to-artifact provenance.
+    - Verify functional sprint ID S0-S7, exact predecessor acceptance label, canonical applicable-gate set, requested exit acceptance, evidence references, and independent reviewer acceptance; reject skipped, stale, self-approved, or cross-sprint evidence.
+    - Require every applicable gate for the current sprint and issue Sx_ACCEPTED only after all have passed; never equate a sprint number with one G-number.
+    - Run formatter check, lint, typecheck, unit, integration, contract, browser, accessibility, security, and migration checks as applicable.
+    - "Run parity fixtures for q/category/author discovery; viewed/liked/new rails; cards/quick view; copy/share/favorite/vote/report; authenticated-member submission plus default-off conditional guest tests; auth; library; contributor profile/leaderboard; blog; theme/floating actions; responsive/accessibility; paid commerce."
+    - "Run adversarial fixtures for price tampering, horizontal access, invalid/duplicate/reordered webhook, concurrency, upload/polyglot/metadata abuse, spam, auth enumeration/session attacks, ranking manipulation, moderation bypass, PII leakage, stored XSS, and log redaction."
+    - Build once; generate checksums/SBOM and promote that immutable artifact through environments.
+    - Deploy the exact native Next.js candidate to an isolated Vercel preview, verify production-secret/data denial and preview noindex, run smoke/synthetic journeys, and compare health signals to declared thresholds.
+    - "Run platform fixtures: vinext/Cloudflare/D1 legacy inventory; Drizzle SQLite-to-Postgres schema/data reconciliation; raw-private versus sanitized-public Blob isolation; scoped upload tokens and 3 MB/4.5 MB boundaries; environment bindings; signed webhooks; optional authenticated idempotent cron; cutover rollback."
+    - Require unexpired independent approvals for R2 and explicit human authorization for R3 production action.
+    - Roll out progressively with kill switches armed; stop or roll back automatically when a threshold is breached.
+  timeoutRetry:
+    timeoutSeconds: 1800
+    maxAttempts: 2
+    retryOn: [documented-flaky-test, transient-staging-capacity, observability-timeout]
+    retryRequires: preserved-first-attempt-evidence
+    neverRetryOn: [security-critical, migration-incompatibility, artifact-digest-mismatch, deterministic-test-failure]
+  acceptanceTests:
+    - Candidate commit, immutable artifact digest, SBOM, checks, and approvals are traceable in one evidence record.
+    - All applicable suites pass with no unresolved critical/high security or accessibility critical findings.
+    - Schema compatibility, backup/restore ownership, rollout thresholds, kill switches, and rollback were exercised.
+    - Sandbox end-to-end checkout grants exactly one entitlement and never trusts client price or redirect state.
+    - Authenticated-member contributions stay zero-price, pass image/anti-spam/moderation controls, and never create seller, payout, commission, tax-beneficiary, or KYC state.
+    - Guest submission is denied by default; an explicitly approved flag test remains zero-price, moderation/ownership bound, privacy/abuse controlled, environment scoped, reversible, and unable to weaken seller isolation; guest reporting remains independently allowed and rate-limited.
+    - Every required public-parity function has golden, failure, accessibility, privacy, and applicable abuse evidence tied to the candidate.
+    - Production authorization is explicit, scoped to artifact/environment, unexpired, and independently recorded.
+    - Every sprint earns Sx_ACCEPTED only with evidence tied to its exact revision/environment and acceptance for every applicable gate by canonical reviewers; next-sprint dispatch is otherwise blocked.
+    - Legacy runtime/data remain recoverable until preview parity, Postgres reconciliation, production observation, rollback drill, and separate retirement approval are recorded.
+  rollback:
+    strategy: progressive-traffic-revert-and-feature-disable
+    steps: [freeze-rollout, disable-risky-feature, route-to-previous-artifact, stop-backfill, verify-core-journeys, reconcile-commerce-events]
+    dataRule: Preserve order, payment-event, entitlement, and audit ledgers; use forward reconciliation.
+  telemetry:
+    events: [release.gate.started, check.completed, approval.recorded, rollout.started, threshold.breached, rollback.completed]
+    fields: [taskId, candidateCommit, artifactDigest, environment, checkName, durationMs, reasonCode, outcome]
+    redact: [testOutputSecrets, environmentValues, customerData, webhookBodies, promptContent, credentials]

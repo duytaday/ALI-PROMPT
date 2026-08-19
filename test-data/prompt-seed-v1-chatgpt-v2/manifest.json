@@ -1,0 +1,51 @@
+{
+  "dataset_version": "prompt-seed-v1",
+  "run_mode": "prompt-only",
+  "complete": false,
+  "generated_at": "2026-08-19T00:00:00.000Z",
+  "output_root": "E:\\aliprompt.vn\\test-data\\prompt-seed-v1-chatgpt-v2",
+  "counts": {
+    "prompts": 1000,
+    "images": 0,
+    "thumbnails": 0,
+    "categories": 10
+  },
+  "production_writes": 0,
+  "full_run_estimate": {
+    "requested_image_api_calls": 1000,
+    "actual_image_api_calls": 0,
+    "actual_image_files": 0,
+    "estimated_cost": {
+      "value": null,
+      "currency": null,
+      "status": "not_computable",
+      "reason": "No approved provider, SKU, or price basis was supplied."
+    },
+    "estimated_time": {
+      "value": "50 minutes at an illustrative 20 successful images/minute, plus up to 85 minutes of specified retry backoff",
+      "status": "assumption—not-provider-SLA"
+    },
+    "estimated_storage": {
+      "original_webp_mb": 600,
+      "thumbnails_mb": 80,
+      "total_mb": 680,
+      "basis": "illustrative average 600 KB/image and 80 KB/thumbnail"
+    },
+    "batches": 100,
+    "records_per_batch": 10,
+    "retry_policy": [
+      {
+        "attempt": 1,
+        "backoff_seconds": 5
+      },
+      {
+        "attempt": 2,
+        "backoff_seconds": 20
+      },
+      {
+        "attempt": 3,
+        "backoff_seconds": 60
+      }
+    ]
+  }
+}

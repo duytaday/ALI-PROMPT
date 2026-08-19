@@ -1,0 +1,13 @@
+{
+  "normalized_text_hash_duplicates": [],
+  "lexical_similarity_proxy": {
+    "maximum": 0.8625,
+    "pair": [
+      "seed-social-media-short-video-0001",
+      "seed-career-personal-branding-0001"
+    ],
+    "threshold": 0.88,
+    "result": "pass"
+  },
+  "semantic_evaluator": "not_available—not claimed as semantic validation"
+}

@@ -1,0 +1,68 @@
+apiVersion: agentpack.aliprompt/v1
+kind: SkillContract
+metadata:
+  name: contributor-media-pipeline
+  version: 1.2.0
+spec:
+  purpose: Authorize contributor image uploads, quarantine raw bytes privately, and publish only verified sanitized derivatives through separate Vercel Blob stores.
+  triggers:
+    - contributor upload token, client upload, Blob callback, media scan, transformation, moderation receipt, or public media delivery changes
+  ownership:
+    owner: commerce-security-engineer
+    allowedAgents: [commerce-security-engineer, domain-data-engineer, frontend-ux-engineer, catalog-seo-trust-engineer, qa-release-reviewer]
+  inputs:
+    trusted:
+      sprintContext: {type: sprint-envelope, fields: [sprintId, predecessorSprintId, predecessorAcceptance, applicableGates, exitAcceptance, evidenceRefs, reviewerAcceptance], required: true}
+      actorAuthorization: {type: server-decision, fields: [actorClass, subjectRef, submissionId, allowedPrefix, environment], required: true}
+      mediaPolicy: {type: versioned-policy, fields: [mimeAllowlist, maxBytes, maxPixels, maxFrames, derivatives, retention], required: true}
+      storeBindings: {type: environment-binding, fields: [privateRawQuarantineStore, publicSanitizedStore], required: true}
+      functionPayloadLimitBytes: {const: 4718592, required: true}
+    untrusted:
+      clientMetadata: {type: object, reason: MIME-size-hash-path-and-submission-claims-are-attacker-controlled}
+      rawUploadBytes: {type: bytes, reason: hostile-until-bounded-decoded-scanned-and-transformed}
+      blobCallback: {type: request, reason: requires-signature-token-environment-and-object-reconciliation}
+  outputSchema:
+    uploadGrant: {fields: [grantId, actorRefHash, submissionId, environment, store, pathPrefix, mimeAllowlist, maxBytes, maxObjectCount, expiresAt, nonce]}
+    quarantineReceipt: {fields: [rawObjectRef, environment, byteCount, detectedType, sourceHash, uploadGrantId, status]}
+    sanitizedReceipt: {fields: [rawObjectHash, publicObjectRefs, outputHashes, formats, dimensions, metadataRemoved, scanDecision, policyVersion]}
+    moderationMediaDecision: {fields: [submissionId, sanitizedReceiptId, eligible, reasonCode, decidedAt]}
+  permissions:
+    allowedTools: [filesystem-read, scoped-write, blob-private-read-write, blob-public-write, isolated-media-decoder, malware-scan, test-runner]
+    readScopes: ["<repositoryRoot>/src/**", "<repositoryRoot>/schema/**", "<repositoryRoot>/tests/**", "<privateRawQuarantineStore>/<authorizedPrefix>/**"]
+    writeScopes: ["<ownedPaths>", "<privateRawQuarantineStore>/<authorizedPrefix>/**", "<publicSanitizedStore>/<derivedPrefix>/**"]
+    forbiddenSideEffects:
+      - placing raw and public objects in one Blob store or assuming per-object public/private access can override store-level access mode
+      - issuing a broad, unscoped, reusable, cross-environment, client-chosen-path, or long-lived upload token
+      - exposing private Blob credentials or server upload tokens to unrelated users, logs, analytics, browser bundles, previews, or model context
+      - copying raw bytes to the public store, serving quarantine objects publicly, or treating client/callback metadata as a sanitization receipt
+      - routing payloads at or above the Vercel Function request-body limit through an application function
+  workflow:
+    - Verify sprint predecessor evidence and reviewer acceptance, authenticated member session, submission ownership, draft state, environment, rate limits, and object quota; accept guest proof only when the explicit approved guest-submission parity flag is enabled and current.
+    - Issue a single-purpose short-lived upload grant bound to actor, submission, private raw store, randomized prefix, MIME allowlist, maximum bytes/object count, environment, nonce, and callback contract.
+    - Prefer direct client upload to the private raw quarantine store for scale; the current 3 MB image policy may use a Vercel Function because it is below 4.5 MB, but direct upload remains the default scalable path.
+    - Authenticate and reconcile upload completion against the grant, actual private-store object, byte count, detected type, content hash, environment, expiry, nonce, and submission state; never trust callback claims alone.
+    - Decode with byte/pixel/frame/time/memory limits in isolation, scan, orientation-normalize, strip all metadata, re-encode allowlisted formats, resize/optimize derivatives, and verify output bytes again.
+    - Write only sanitized derivatives with randomized immutable names to the separate public sanitized store; publish references only after a durable sanitized receipt is attached to pending_moderation.
+    - Keep quarantine reads limited to processing service and authorized moderators; enforce retention, legal hold, failed-upload cleanup, orphan reconciliation, and audited deletion independently in each environment.
+  timeoutRetry:
+    timeoutSeconds: 900
+    maxAttempts: 3
+    retryOn: [direct-upload-timeout, callback-delivery, scanner-unavailable, transform-worker-timeout]
+    retryRequires: [same-upload-grant, idempotency-key, preserved-quarantine-object]
+    neverRetryOn: [authorization-failure, token-scope-mismatch, environment-mismatch, malware-detected, resource-limit, public-raw-leak]
+  acceptanceTests:
+    - Upload grants are authorized, short-lived, one-purpose, environment-bound, object-count/size/type constrained, prefix scoped, replay controlled, and server audited.
+    - A 3 MB valid fixture succeeds through the supported function path and direct-client path; boundary tests reject requests at or above 4.5 MB before function parsing, and scale tests prefer direct upload.
+    - Raw bytes exist only in the private quarantine store and cannot be fetched through public URLs, guessed names, redirects, image optimization, cache, metadata, or another environment.
+    - Only verified metadata-free re-encoded derivatives enter the separate public store; spoofed, active, polyglot, malformed, oversized, over-frame, decompression-bomb, and scanner-uncertain input fails closed.
+    - Duplicate callbacks, upload retries, replacement races, stale receipts, orphan objects, and cleanup jobs converge idempotently without publishing an unreviewed image.
+    - Media receipt is necessary but insufficient for publication; contributors cannot self-publish, price, sell, or receive payout from a submission.
+    - Guest upload grants are denied by default; when the separately approved parity flag is enabled, guest ownership and abuse/privacy controls are at least as strict as member controls and never grant seller or broader submission authority.
+  rollback:
+    strategy: revoke-new-upload-grants-and-stop-public-promotion
+    steps: [disable-upload-grant-endpoint, revoke-active-grants, stop-transform-workers, preserve-private-quarantine, remove-unreferenced-public-derivatives, reconcile-receipts]
+    preserve: [audit-events, quarantine-receipts, sanitized-receipts, moderation-links, policy-version]
+  telemetry:
+    events: [upload.grant_issued, upload.denied, blob.callback_rejected, media.quarantined, media.sanitized, media.promoted, media.cleanup_reconciled]
+    fields: [taskId, sprintId, predecessorAcceptance, applicableGates, exitAcceptance, environment, actorClass, submissionIdHash, grantIdHash, byteBucket, detectedType, reasonCode, durationMs, outcome]
+    redact: [rawBytes, blobTokens, storeCredentials, objectUrls, contactData, ipAddresses, deviceSignals, imageMetadata, promptContent]

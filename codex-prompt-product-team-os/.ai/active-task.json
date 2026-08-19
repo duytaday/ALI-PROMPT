@@ -1,0 +1,12 @@
+{
+  "task_id": "UNSET",
+  "title": "",
+  "status": "draft",
+  "owner": "product_hq",
+  "approver": "Founder",
+  "allowed_write_paths": [],
+  "required_approvals": [],
+  "acceptance_criteria": [],
+  "quality_gate_profile": "standard",
+  "risk_level": "unknown"
+}

@@ -1,0 +1,13 @@
+{
+  "normalized_text_hash_duplicates": [],
+  "lexical_similarity_proxy": {
+    "maximum": 0.837,
+    "pair": [
+      "seed-marketing-branding-aeo-0062",
+      "seed-visual-design-ai-art-0062"
+    ],
+    "threshold": 0.88,
+    "result": "pass"
+  },
+  "semantic_evaluator": "not_available—not claimed as semantic validation"
+}

@@ -1,0 +1,590 @@
+{
+  "schemaVersion": "1.0.0",
+  "handoffVersion": 3,
+  "handoffId": "HO-S0-K0-20260818",
+  "createdAt": "2026-08-18T03:45:13.133Z",
+  "objective": {
+    "summary": "S0/K0 documentation-only audit for the ALIPROMPT Prompt Knowledge Network; canonical envelope is S0, START, G0/G1, requested exit S0_ACCEPTED.",
+    "businessReason": "Prevent later knowledge-network implementation from treating an approved target, roadmap, broad dirty worktree, or template acceptance labels as verified predecessor evidence.",
+    "desiredOutcomes": [
+      "A reviewer can distinguish CURRENT repository facts from APPROVED NEXT product target and GAP/BLOCKED items.",
+      "A future S1 or K1 invocation is denied until an independently accepted S0 artifact binds revision, environment, gates, evidence, reviewer, decision, and timestamp.",
+      "K0 data, ADR, migration, security, analytics, and rollback requirements are explicit without changing application code."
+    ]
+  },
+  "scope": {
+    "included": [
+      "S0 and K0 repository, contract, sprint-sequencing, runtime, schema, route, test, dirty-tree, and evidence audit.",
+      "Task Contract and schema-valid handoff creation only.",
+      "K0 data-inventory and future reversible migration requirements."
+    ],
+    "excluded": [
+      "Any S1-S7 or K1-K6 implementation, application, schema, migration, dependency, provider, deployment, production, DNS, payment, or runtime change.",
+      "Acceptance or release claim for S0, K0, PK-01 through PK-24, or any later sprint.",
+      "Reference-site code, assets, copy, data, prompts, or private APIs."
+    ],
+    "assumptions": [
+      "The active product contract v1.4.0 is approved target intent, not implementation or acceptance evidence.",
+      "All pre-existing dirty and untracked application paths remain user or concurrent work unless a future explicit ownership handoff says otherwise.",
+      "The absence of an in-repository schema-valid accepted handoff means later-sprint dispatch is fail-closed."
+    ],
+    "constraints": [
+      "No application code or runtime configuration may be written in S0.",
+      "Independent qa-release-reviewer review is required before S0_ACCEPTED.",
+      "No secret, raw PII, protected prompt body, signed URL, payment payload, or reference content is recorded."
+    ]
+  },
+  "repository": {
+    "root": "E:/aliprompt.vn",
+    "vcs": "git",
+    "branch": "main",
+    "baselineCommit": "944121f3fc8313cf52eaf7f8f9068c5f2591b26a",
+    "headCommit": "944121f3fc8313cf52eaf7f8f9068c5f2591b26a",
+    "workingTree": "dirty",
+    "unrelatedChangesPresent": true,
+    "concurrentEditorsPresent": true
+  },
+  "repoEvidence": [
+    {
+      "id": "E-CONTRACT-140",
+      "kind": "file",
+      "source": "agent-pack/product/ACTIVE-PRODUCT-CONTRACT.md",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "Contract ALIPROMPT-COMMERCE-COMMUNITY-V1 v1.4.0 is approved_next and explicitly says S0 is read-only and later sprints require exact predecessor acceptance.",
+      "redacted": true
+    },
+    {
+      "id": "E-S0-ENVELOPE",
+      "kind": "file",
+      "source": "agent-pack/sprints/vi/S0-audit-contracts-adrs.prompt.md",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "Canonical S0 envelope is predecessor START, gates G0/G1, requested exit S0_ACCEPTED, and no application-code mutation.",
+      "redacted": true
+    },
+    {
+      "id": "E-REPO-STATUS-20260818",
+      "kind": "command-output",
+      "source": "git rev-parse, git branch, git status, and git log executed in E:/aliprompt.vn",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "main at 944121f3fc8313cf52eaf7f8f9068c5f2591b26a has broad modified, deleted, and untracked paths, including implementation, migrations, documentation, agent-pack, and tests; all were preserved.",
+      "redacted": true
+    },
+    {
+      "id": "E-NO-PREDECESSOR-20260818",
+      "kind": "command-output",
+      "source": "rg search for accepted status and handoff/acceptance artifacts outside templates and agent-pack schemas",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "No actual schema-valid acceptance report or handoff with overallStatus passed and exact Sx_ACCEPTED predecessor binding was found. Strings in task and sprint templates are non-evidence.",
+      "redacted": true
+    },
+    {
+      "id": "E-RUNTIME-20260818",
+      "kind": "command-output",
+      "source": "package.json scripts/dependencies and app route inventory",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "Current worktree declares Next.js 16, React 19, Drizzle/Postgres, Vercel Blob and routes for public catalog, auth, library, moderation/admin, media, checkout, payment webhook, blog, and health/readiness. This is CURRENT code presence only.",
+      "redacted": true
+    },
+    {
+      "id": "E-SCHEMA-20260818",
+      "kind": "command-output",
+      "source": "db/schema.ts declaration inventory and drizzle SQL inventory",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "Current uncommitted schema declares users, sessions, reset/rate-limit, catalog, media, engagement, reports, commerce, articles, and audit tables with six SQL migrations. K0 Question/Answer/Version/Artifact/Attempt/Tag/Reputation/outbox tables and legacy reconciliation are not evidenced as implemented.",
+      "redacted": true
+    },
+    {
+      "id": "E-CONTROLS-20260818",
+      "kind": "command-output",
+      "source": "read of .ai/project.json, .ai/active-task.json, .ai/context/CURRENT_STATE.md, .ai/ownership.json, and docs/OWNERSHIP.md",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "All five operating-control files are absent, so no machine-readable task ownership or current-state baseline can be verified.",
+      "redacted": true
+    },
+    {
+      "id": "E-VALIDATORS-20260818",
+      "kind": "test-report",
+      "source": "npm test; npm run lint; node agent-pack/scripts/validate-task-contract.mjs --all --self-test; git diff --check",
+      "capturedAt": "2026-08-18T03:42:53.714Z",
+      "summary": "AI-contract validation, Drizzle schema consistency, Next.js 16.2.6 production build, 29 Node tests, 1 TypeScript payment test, lint, all task-contract/self-tests, and scoped whitespace validation passed. These local checks do not establish database integration, Preview isolation, browser E2E, independent review, or later-sprint acceptance.",
+      "redacted": true
+    },
+    {
+      "id": "E-LOCAL-BASELINE-20260818",
+      "kind": "test-report",
+      "source": "Fresh local baseline executed in E:/aliprompt.vn at handoff v2",
+      "capturedAt": "2026-08-18T03:42:53.714Z",
+      "summary": "The existing dirty worktree builds and its current automated checks pass. Route, schema, and SQL inventories still evidence the legacy prompt catalog rather than the approved Question/Answer/Version/Attempt knowledge-network target.",
+      "redacted": true
+    },
+    {
+      "id": "E-PHASE1-AUDIT-20260818",
+      "kind": "file",
+      "source": "docs/phase1-current-audit.md",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "Existing audit correctly records that local source checks are not Preview, database integration, browser E2E, screenshot, or independent QA evidence.",
+      "redacted": true
+    },
+    {
+      "id": "E-HANDOFF-SCHEMA-20260818",
+      "kind": "test-report",
+      "source": "Ajv Draft 2020-12 validation of docs/HO-S0-K0-PROMPT-KNOWLEDGE-NETWORK.json against agent-pack/schemas/handoff.schema.json",
+      "capturedAt": "2026-08-18T03:38:00.625Z",
+      "summary": "The handoff validates after correcting the criterion status to a schema-allowed blocked value.",
+      "redacted": true
+    }
+  ],
+  "ownership": {
+    "currentOwner": {
+      "id": "orchestrator",
+      "role": "S0/K0 technical orchestrator",
+      "responsibility": "Preserve the dirty worktree, record evidence, and stop without self-accepting or dispatching a later sprint."
+    },
+    "contributors": [
+      {
+        "id": "product-owner",
+        "role": "Product decision owner",
+        "responsibility": "Resolve S0-reserved outcome and policy decisions without turning target documents into implementation evidence."
+      },
+      {
+        "id": "qa-release-reviewer",
+        "role": "Independent reviewer",
+        "responsibility": "Challenge G0/G1 evidence and issue or refuse the S0 acceptance verdict independently."
+      }
+    ],
+    "responsibilityMap": [
+      {
+        "area": "S0/K0 sequencing, dirty-tree preservation, and handoff",
+        "ownerId": "orchestrator"
+      },
+      {
+        "area": "Product metrics, policy values, and outcome acceptance intent",
+        "ownerId": "product-owner"
+      },
+      {
+        "area": "Independent S0 gate verdict",
+        "ownerId": "qa-release-reviewer"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "DEC-S0-K0-SCOPE",
+      "status": "accepted",
+      "context": "The requested implementation prompt requires an exact predecessor acceptance before a later K-slice may start.",
+      "optionsConsidered": [
+        "Infer a later sprint from current code presence.",
+        "Run canonical S0/K0 with predecessor START and no application-code write."
+      ],
+      "choice": "Run S0/K0 only and stop with this handoff.",
+      "rationale": "No actual accepted predecessor artifact was found, while the canonical sequence explicitly fail-closes later work.",
+      "consequences": [
+        "No later K-slice is implemented in this task.",
+        "Existing worktree code is treated as audit evidence rather than acceptance evidence.",
+        "Independent review is now the required next action."
+      ],
+      "ownerId": "orchestrator",
+      "evidenceRefs": [
+        "E-S0-ENVELOPE",
+        "E-NO-PREDECESSOR-20260818"
+      ]
+    },
+    {
+      "id": "DEC-K0-ADDITIVE-MIGRATION",
+      "status": "proposed",
+      "context": "AP-PDN-001 requires the catalog-to-knowledge migration to be additive, idempotent, reversible, and reconciled before cutover.",
+      "optionsConsidered": [
+        "Rewrite or drop legacy prompt tables.",
+        "Future additive map, backfill, verify, compatibility read/feature flags, cutover, and separate contract step."
+      ],
+      "choice": "Reserve the additive reversible approach for a later approved schema slice; perform no migration in S0.",
+      "rationale": "Current runtime database volume, identity mapping, file types, moderation backlog, provider bindings, and reconciliation evidence are unknown.",
+      "consequences": [
+        "K0 must inventory row counts, null distributions, PII classes, file types, hashes, and legacy mapping exceptions before schema work.",
+        "No production or local data mutation occurs in this task.",
+        "A future schema task requires a named data owner and independent review."
+      ],
+      "ownerId": "platform-product-architect",
+      "evidenceRefs": [
+        "E-SCHEMA-20260818",
+        "E-CONTRACT-140"
+      ]
+    },
+    {
+      "id": "DEC-S0-OWNER-VALUES",
+      "status": "proposed",
+      "context": "The PRD reserves several behavior-changing numeric and policy values for S0 owner decision.",
+      "optionsConsidered": [
+        "Invent numerical values in code or documentation.",
+        "Keep values unresolved and require explicit owner decisions with rationale, scope, and rollback."
+      ],
+      "choice": "Keep the values unresolved and route OD-S0-01 through OD-S0-07 to the human owner using the decision packet in the S0/K0 Task Contract.",
+      "rationale": "The active contract and PRD explicitly forbid inventing the WVSA target, file cap changes, self-accept wait, reputation policy, moderation SLA, tag set, and retention/appeal policy.",
+      "consequences": [
+        "K1-K6 behavior that depends on these values remains blocked or uses only already-approved safe behavior explicitly listed in the owner decision packet.",
+        "An owner decision record is required before any material behavior change."
+      ],
+      "ownerId": "product-owner",
+      "evidenceRefs": [
+        "E-CONTRACT-140"
+      ]
+    }
+  ],
+  "trustBoundaries": [
+    {
+      "id": "TB-S0-REPOSITORY",
+      "source": "Dirty repository files, plans, templates, and existing documentation",
+      "destination": "S0 audit record",
+      "data": [
+        "repository status",
+        "runtime and schema inventory",
+        "test command result",
+        "documentation claims"
+      ],
+      "classification": "mixed",
+      "authentication": "Local filesystem access only; no assertion is accepted from a document without reproducible repository evidence.",
+      "authorization": "S0 permits read-only inspection and the two task-owned documentation files only.",
+      "validation": "Commands are recorded with paths and outputs; template labels are distinguished from accepted artifacts.",
+      "controls": [
+        "preserve dirty paths",
+        "no reset, checkout, clean, or application write",
+        "schema-valid handoff",
+        "independent reviewer required"
+      ],
+      "failureModes": [
+        "target documents mistaken for implemented capability",
+        "dirty work overwritten",
+        "self-accepted sprint",
+        "later-sprint action without evidence"
+      ]
+    },
+    {
+      "id": "TB-S0-EXTERNAL-AND-SECRET",
+      "source": "Public reference, future providers, environment templates, and uploaded/external content",
+      "destination": "Future application boundaries only",
+      "data": [
+        "public capability observations",
+        "environment variable names",
+        "future data and media requirements"
+      ],
+      "classification": "restricted",
+      "authentication": "No external provider or live environment was contacted in S0.",
+      "authorization": "No deployment, credential, provider, database, Blob, payment, or production action is authorized.",
+      "validation": "Only public outcomes and redacted configuration names are documented; no secret or protected content is retained.",
+      "controls": [
+        "clean-room boundary",
+        "secret and PII exclusion",
+        "separate private raw and public sanitized media requirement",
+        "Preview and production isolation requirement"
+      ],
+      "failureModes": [
+        "secret exposure",
+        "reference copying",
+        "preview-to-production crossover",
+        "public raw media"
+      ]
+    }
+  ],
+  "changes": {
+    "changeSetVersion": 1,
+    "summary": "S0/K0 added only a Task Contract and this blocked/partial handoff; no application, schema, migration, dependency, or runtime behavior changed.",
+    "files": [
+      {
+        "path": "docs/TASK-S0-K0-PROMPT-KNOWLEDGE-NETWORK.md",
+        "kind": "added",
+        "ownerId": "orchestrator",
+        "rationale": "Records the canonical S0/K0 work order, scope, gates, allowed paths, risks, and stop condition.",
+        "userImpact": "Prevents accidental implementation outside the first valid slice.",
+        "securityImpact": "Prevents scope escalation and records no-secret/no-PII constraints."
+      },
+      {
+        "path": "docs/HO-S0-K0-PROMPT-KNOWLEDGE-NETWORK.json",
+        "kind": "added",
+        "ownerId": "orchestrator",
+        "rationale": "Transfers evidence and explicit blockers to an independent reviewer in the canonical schema.",
+        "userImpact": "Provides a reproducible handoff before any later sprint.",
+        "securityImpact": "Records trust boundaries and avoids sensitive evidence."
+      }
+    ],
+    "behaviorChanges": [
+      "No application behavior change."
+    ],
+    "dataMigrations": [
+      "None; K0 inventory and future additive migration requirements are documented only."
+    ],
+    "configurationChanges": [
+      "None."
+    ],
+    "dependencyChanges": [
+      "None."
+    ]
+  },
+  "tests": {
+    "executions": [
+      {
+        "id": "T-S0-TASK-VALIDATION",
+        "layer": "contract",
+        "commandOrProcedure": "node agent-pack/scripts/validate-task-contract.mjs --all --self-test and node agent-pack/scripts/validate-task-contract.mjs docs/TASK-S0-K0-PROMPT-KNOWLEDGE-NETWORK.md",
+        "status": "passed",
+        "summary": "Self-test, existing agent-pack task contracts, and the S0/K0 Task Contract passed.",
+        "evidenceRefs": [
+          "E-VALIDATORS-20260818"
+        ]
+      },
+      {
+        "id": "T-S0-AI-CONTRACTS",
+        "layer": "contract",
+        "commandOrProcedure": "npm run ai:validate",
+        "status": "passed",
+        "summary": "AI contract validation reported passed for JSON, YAML, schemas, invariant guards, skills, and evaluation inputs.",
+        "evidenceRefs": [
+          "E-VALIDATORS-20260818"
+        ]
+      },
+      {
+        "id": "T-S0-LINT",
+        "layer": "static",
+        "commandOrProcedure": "npm run lint",
+        "status": "passed",
+        "summary": "Lint passed on the existing dirty worktree; it is not independent release or integration evidence.",
+        "evidenceRefs": [
+          "E-VALIDATORS-20260818"
+        ]
+      },
+      {
+        "id": "T-S0-LOCAL-BASELINE",
+        "layer": "integration",
+        "commandOrProcedure": "npm test",
+        "status": "passed",
+        "summary": "AI contracts, Drizzle schema consistency, production build, 29 Node tests, and 1 TypeScript payment test passed on the current worktree; no live database, Preview, or browser environment was exercised.",
+        "evidenceRefs": [
+          "E-LOCAL-BASELINE-20260818",
+          "E-VALIDATORS-20260818"
+        ]
+      },
+      {
+        "id": "T-S0-HANDOFF-SCHEMA",
+        "layer": "contract",
+        "commandOrProcedure": "Validate this JSON against agent-pack/schemas/handoff.schema.json with Ajv Draft 2020-12.",
+        "status": "passed",
+        "summary": "The schema initially rejected a criterion status outside its allowed enum; the documentation-only correction was revalidated successfully.",
+        "evidenceRefs": [
+          "E-HANDOFF-SCHEMA-20260818"
+        ]
+      }
+    ],
+    "coverageSummary": "S0 documentation controls, source-of-truth audit, Task Contract, AI contract validation, and lint were checked. No application behavior is claimed tested by S0.",
+    "untestedAreas": [
+      "Real PostgreSQL data inventory and reconciliation",
+      "Preview environment isolation and Vercel bindings",
+      "Browser E2E, accessibility, performance, and screenshots",
+      "Blob sanitization and media security integration",
+      "Payment/webhook/email provider integration",
+      "Independent G0/G1 acceptance"
+    ]
+  },
+  "acceptance": {
+    "criteriaVersion": "1.0.0",
+    "criteria": [
+      {
+        "id": "S0-ENVELOPE",
+        "requirement": "The canonical S0 envelope is used with predecessor START, G0/G1, and requested S0_ACCEPTED exit.",
+        "status": "passed",
+        "evidenceRefs": [
+          "E-S0-ENVELOPE",
+          "E-CONTRACT-140"
+        ],
+        "notes": "No later sprint or K-slice was dispatched."
+      },
+      {
+        "id": "S0-REPO-AUDIT",
+        "requirement": "Repository state, dirty paths, runtime, schema, routes, tests, and exact predecessor evidence are inventoried without overwriting concurrent work.",
+        "status": "passed",
+        "evidenceRefs": [
+          "E-REPO-STATUS-20260818",
+          "E-NO-PREDECESSOR-20260818",
+          "E-RUNTIME-20260818",
+          "E-SCHEMA-20260818",
+          "E-CONTROLS-20260818"
+        ],
+        "notes": "The worktree remains dirty and unowned paths were not modified."
+      },
+      {
+        "id": "K0-DATA-ADR-INVENTORY",
+        "requirement": "K0 records the required inventory, additive mapping, migration, reconciliation, feature-flag, and rollback constraints before application or schema work.",
+        "status": "blocked",
+        "evidenceRefs": [
+          "E-CONTRACT-140",
+          "E-SCHEMA-20260818"
+        ],
+        "notes": "Design constraints are documented, but real data row/file counts, null distributions, PII map, artifact inventory, and reconciliation cannot be evidenced without an approved isolated data source."
+      },
+      {
+        "id": "S0-OWNER-DECISIONS",
+        "requirement": "Reserved S0 owner decisions are explicit and not invented.",
+        "status": "blocked",
+        "evidenceRefs": [
+          "E-CONTRACT-140"
+        ],
+        "notes": "WVSA target/window, self-accept wait, reputation policy, moderation SLA, expanded initial tags, retention/appeal policy, and any changed upload values require owner decisions."
+      },
+      {
+        "id": "S0-INDEPENDENT-REVIEW",
+        "requirement": "An independent qa-release-reviewer verifies G0/G1 against this exact revision and handoff before S0_ACCEPTED is issued.",
+        "status": "blocked",
+        "evidenceRefs": [
+          "E-NO-PREDECESSOR-20260818",
+          "E-S0-ENVELOPE"
+        ],
+        "notes": "No independent acceptance artifact exists; the current DRI cannot self-accept."
+      }
+    ],
+    "overallStatus": "partial",
+    "blockingCriteria": [
+      "S0-OWNER-DECISIONS",
+      "S0-INDEPENDENT-REVIEW",
+      "K0-DATA-ADR-INVENTORY"
+    ]
+  },
+  "security": {
+    "reviewStatus": "not-run",
+    "threatModelVersion": "1.0.0",
+    "secretScanStatus": "not-run",
+    "personalDataHandling": "The Task Contract and handoff contain only redacted evidence references and configuration variable names; no raw PII is intentionally recorded.",
+    "contentProtection": "No protected prompt body, payment payload, signed URL, credential, or reference-site content is included; future K-slices must preserve the documented public DTO and media boundaries.",
+    "findings": [
+      {
+        "id": "SEC-S0-OWNERSHIP-GAP",
+        "severity": "medium",
+        "status": "open",
+        "description": "The working tree is broadly dirty and the expected machine-readable task/current-state/ownership controls are absent, so write provenance cannot be independently attributed from repository controls.",
+        "affectedAssets": [
+          "repository working tree",
+          "future task ownership",
+          "release evidence provenance"
+        ],
+        "mitigation": "Keep S0 writes confined to the two named documentation files; require an independent reviewer to establish a baseline and future explicit ownership leases before implementation.",
+        "ownerId": "orchestrator",
+        "evidenceRefs": [
+          "E-REPO-STATUS-20260818",
+          "E-CONTROLS-20260818"
+        ]
+      }
+    ],
+    "knownLimitations": [
+      "No source/bundle secret scan, database integration security test, external provider check, Preview check, or independent security review was performed in S0.",
+      "Current code presence does not prove the private-quarantine/public-sanitized Blob separation in a real environment."
+    ]
+  },
+  "risks": [
+    {
+      "id": "R-S0-DIRTY-TREE",
+      "description": "Broad pre-existing dirty/untracked work could be overwritten or falsely attributed by a later task.",
+      "likelihood": "likely",
+      "impact": "major",
+      "severity": "high",
+      "mitigation": "Preserve all existing paths, baseline the tree for the reviewer, and require a file-ownership lease before any later write.",
+      "trigger": "A later task attempts writes outside a newly approved contract or without a fresh baseline.",
+      "ownerId": "orchestrator",
+      "status": "open"
+    },
+    {
+      "id": "R-S0-DATA-UNKNOWN",
+      "description": "No approved isolated database/data inventory proves legacy volume, nulls, identities, PII distribution, artifact types, or backfill compatibility.",
+      "likelihood": "almost-certain",
+      "impact": "major",
+      "severity": "high",
+      "mitigation": "Require a K0 read-only inventory, source manifest, mapping ledger, and reconciliation/rollback plan before any schema or backfill action.",
+      "trigger": "A schema or migration task is proposed without the inventory and independent data review.",
+      "ownerId": "domain-data-engineer",
+      "status": "open"
+    },
+    {
+      "id": "R-S0-UNRESOLVED-OWNER-POLICY",
+      "description": "Behavior-changing metric, moderation, reputation, retention, and policy values remain undecided.",
+      "likelihood": "likely",
+      "impact": "moderate",
+      "severity": "medium",
+      "mitigation": "Obtain explicit owner decisions with scope, rationale, safety guardrail, environment, and rollback before values affect an implementation slice.",
+      "trigger": "A later task needs one of the reserved values to change behavior.",
+      "ownerId": "product-owner",
+      "status": "open"
+    },
+    {
+      "id": "R-S0-NO-INDEPENDENT-ACCEPTANCE",
+      "description": "No independent reviewer has accepted G0/G1 for an exact repository revision and environment.",
+      "likelihood": "almost-certain",
+      "impact": "major",
+      "severity": "high",
+      "mitigation": "Require qa-release-reviewer review of this schema-valid handoff and any supporting evidence; do not start S1 or K1 before durable S0_ACCEPTED.",
+      "trigger": "Any request to dispatch a later sprint or K-slice.",
+      "ownerId": "qa-release-reviewer",
+      "status": "open"
+    }
+  ],
+  "rollback": {
+    "supported": true,
+    "ownerId": "orchestrator",
+    "strategy": "Documentation-only rollback: remove only the two task-owned S0/K0 documentation files after explicit owner direction; do not alter the existing dirty worktree.",
+    "prerequisites": [
+      "Confirm the exact two documentation paths are still task-owned.",
+      "Record the owner direction and final repository status before any removal."
+    ],
+    "steps": [
+      "Do not reset, checkout, clean, or modify application/runtime paths.",
+      "If the owner withdraws this S0/K0 packet, remove only the Task Contract and handoff through a scoped documented change.",
+      "Re-run Task Contract and handoff schema validation as applicable and record the result."
+    ],
+    "dataRecovery": "No data, migration, provider, deployment, or runtime mutation occurred, so no data recovery is required.",
+    "validation": [
+      "Verify no application/configuration/schema/migration path changed by this task.",
+      "Verify the pre-existing dirty paths remain present and unchanged by the scoped rollback."
+    ],
+    "irreversibleItems": [],
+    "estimatedMinutes": 5
+  },
+  "nextOwner": {
+    "owner": {
+      "id": "qa-release-reviewer",
+      "role": "Independent S0 gate reviewer",
+      "responsibility": "Validate the exact handoff, challenge G0/G1 evidence and scope, and issue an independent verdict without starting a later sprint."
+    },
+    "requestedActions": [
+      "Validate this handoff against the schema and confirm the Task Contract/diff stayed documentation-only.",
+      "Review G0/G1 evidence, including clean-room boundary, dirty-tree preservation, target-versus-current separation, K0 data-plan gaps, and trust boundaries.",
+      "Return a schema-valid independent verdict; issue S0_ACCEPTED only if the missing owner decisions and required evidence are actually resolved, otherwise keep it blocked/partial."
+    ],
+    "dependencies": [
+      "A completed JSON Schema validation receipt for this handoff.",
+      "Product-owner responses for the S0-reserved policy decisions when their resolution is required for the verdict.",
+      "Read-only data-owner inventory evidence if K0 data completeness is expected for S0 acceptance."
+    ],
+    "blockingQuestions": [
+      "Which isolated, approved data source and data owner may supply K0 row/file/PII inventory and reconciliation evidence?",
+      "What are the explicit decisions for OD-S0-01 through OD-S0-07 in the Task Contract: WVSA, upload caps, self-answer acceptance, reputation, moderation SLA, initial tags, and retention/appeal?",
+      "Who owns the pre-existing dirty worktree and will provide a future explicit file-ownership lease?"
+    ],
+    "approvalRequired": true
+  },
+  "approvals": [
+    {
+      "id": "APR-S0-INDEPENDENT-QA",
+      "approverId": "qa-release-reviewer",
+      "role": "Independent S0 G0/G1 reviewer",
+      "scope": "S0/K0 evidence on exact repository revision 944121f3fc8313cf52eaf7f8f9068c5f2591b26a and its documented dirty-tree baseline; no later sprint, deployment, provider, migration, or production action.",
+      "decision": "pending",
+      "conditions": [
+        "Validate the handoff schema after write.",
+        "Verify no application/runtime/configuration paths were changed by S0/K0.",
+        "Verify OD-S0-01 through OD-S0-07 are resolved by dated owner evidence or explicitly retain the correct non-passed verdict.",
+        "Bind any verdict to handoff version 3, the exact Git revision, documented dirty-tree baseline, environment scope, G0/G1 evidence, reviewer identity, decision, and timestamp.",
+        "Do not issue a later-sprint acceptance from this review."
+      ],
+      "evidenceRefs": [
+        "E-REPO-STATUS-20260818",
+        "E-NO-PREDECESSOR-20260818",
+        "E-VALIDATORS-20260818"
+      ]
+    }
+  ]
+}

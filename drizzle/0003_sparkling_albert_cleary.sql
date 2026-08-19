@@ -1,0 +1,2 @@
+ALTER TABLE "auth_rate_limits" DROP CONSTRAINT "auth_rate_limits_action_allowed";--> statement-breakpoint
+ALTER TABLE "auth_rate_limits" ADD CONSTRAINT "auth_rate_limits_action_allowed" CHECK ("auth_rate_limits"."action" IN ('login', 'register', 'password_reset', 'submission', 'report'));

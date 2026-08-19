@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "repositoryRoot": "../..",
+  "purpose": "Run existing ALIPROMPT repository technical commands and retain their outputs as evidence.",
+  "limits": [
+    "A command result is technical evidence only; it never grants G0-G7 acceptance, QA release approval, Product Owner outcome acceptance, human production approval, or next-sprint authority.",
+    "Use only after the Task Contract and canonical sprint envelope are valid.",
+    "A command failure, missing command, stale revision, or wrong environment is failed or blocked evidence, never a reason to weaken checks."
+  ],
+  "commands": [
+    {
+      "id": "ai-contracts",
+      "command": "npm run ai:validate",
+      "description": "Validate existing ALIPROMPT AI contracts."
+    },
+    {
+      "id": "lint",
+      "command": "npm run lint",
+      "description": "Run the repository ESLint configuration."
+    },
+    {
+      "id": "full-test",
+      "command": "npm test",
+      "description": "Run the repository test script, including its configured build and rendered HTML test."
+    }
+  ]
+}
