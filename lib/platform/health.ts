@@ -15,21 +15,33 @@ async function probePostgres(databaseUrl: string, timeoutMs: number) {
 
   try {
     await client`select 1 as ready`;
-    const requiredTables = [
+    const requiredPublicTables = [
       "users",
       "prompts",
       "prompt_versions",
       "favorites",
       "entitlements",
-      "__drizzle_migrations",
     ];
-    const result = await client<{ table_name: string | null }[]>`
-      select table_name
+    const result = await client<
+      { table_schema: string | null; table_name: string | null }[]
+    >`
+      select table_schema, table_name
       from information_schema.tables
-      where table_schema = 'public'
-        and table_name in ${client(requiredTables)}
+      where (
+        table_schema = 'public'
+        and table_name in ${client(requiredPublicTables)}
+      ) or (
+        table_schema = 'drizzle'
+        and table_name = '__drizzle_migrations'
+      )
     `;
-    if (result.length !== requiredTables.length) {
+    const availableTables = new Set(
+      result.map(({ table_schema, table_name }) => `${table_schema}.${table_name}`),
+    );
+    const hasRequiredSchema =
+      requiredPublicTables.every((table) => availableTables.has(`public.${table}`)) &&
+      availableTables.has("drizzle.__drizzle_migrations");
+    if (!hasRequiredSchema) {
       throw new Error("Required schema tables are unavailable.");
     }
   } finally {
