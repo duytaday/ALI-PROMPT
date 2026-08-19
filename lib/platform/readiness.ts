@@ -46,7 +46,7 @@ export async function evaluatePlatformReadiness({
   databaseUrl,
   probeDatabase,
   probeBlob,
-  timeoutMs = 2_000,
+  timeoutMs = 5_000,
   now = () => new Date(),
 }: ReadinessInput): Promise<PlatformReadiness> {
   const checks: ReadinessCheck[] = [];
