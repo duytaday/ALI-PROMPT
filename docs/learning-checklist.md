@@ -47,3 +47,10 @@ Ghi lại câu trả lời, quyết định hoặc ví dụ do chủ dự án t�
 - [ ] Biết GitHub không tự cấp biến môi trường cho Vercel; mỗi môi trường phải cấu hình riêng.
 - [ ] Biết Preview cần được kiểm thử và chấp nhận trước khi deploy Production.
 - [ ] Biết cách xác nhận branch, commit SHA và deployment URL đang được kiểm thử.
+
+## Cổng 5 — Hiểu tốc độ tải và loading state
+
+- [ ] Phân biệt được tốc độ tải thật (TTFB/query/database cold start) với cảm giác chờ (loading UI).
+- [ ] Giải thích được vì sao cache dữ liệu catalog công khai nhưng không cache session hoặc dữ liệu riêng của user.
+- [ ] Biết catalog homepage được làm mới tối đa sau 60 giây; dữ liệu user vẫn được kiểm tra theo từng request.
+- [ ] Hiểu skeleton phải giữ gần đúng kích thước nội dung thật để tránh nhảy layout khi dữ liệu xuất hiện.

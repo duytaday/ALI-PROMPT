@@ -1,4 +1,5 @@
 import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { getDb } from "../db";
 import { categories, favorites, products, promptMedia, promptReactions, promptVersions, prompts, users } from "../db/schema";
 
@@ -85,6 +86,32 @@ export async function listPublicPrompts(rawFilters: CatalogFilters = {}, limit =
   if (filters.order === "helpful") return query.orderBy(desc(prompts.likeCount), desc(prompts.publishedAt)).limit(safeLimit).offset(offset);
   return query.orderBy(desc(prompts.publishedAt), desc(prompts.createdAt)).limit(safeLimit).offset(offset);
 }
+
+/**
+ * The public homepage rails are shared by every anonymous visitor. Cache the
+ * complete set as one value so warm requests avoid four serialized Postgres
+ * round trips on the serverless connection budget.
+ */
+export const getCachedHomepageCatalog = unstable_cache(
+  async () => {
+    const [activeCategories, newest, mostViewed, mostHelpful] = await Promise.all([
+      getActiveCategories(),
+      listPublicPrompts({ order: "newest" }, 12),
+      listPublicPrompts({ order: "popular" }, 12),
+      listPublicPrompts({ order: "helpful" }, 12),
+    ]);
+
+    return { activeCategories, newest, mostViewed, mostHelpful };
+  },
+  ["public-homepage-catalog-v1"],
+  { revalidate: 60, tags: ["public-catalog"] },
+);
+
+export const getCachedActiveCategories = unstable_cache(
+  getActiveCategories,
+  ["public-active-categories-v1"],
+  { revalidate: 60, tags: ["public-catalog"] },
+);
 
 export async function countPublicPrompts(rawFilters: CatalogFilters = {}) {
   const filters = normalizeCatalogFilters(rawFilters);

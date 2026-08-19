@@ -5,7 +5,7 @@ import MarketplaceShell from "./_components/MarketplaceShell";
 import PromptCard from "./_components/PromptCard";
 import PromptShelf from "./_components/PromptShelf";
 import Pagination from "./_components/Pagination";
-import { countPublicPrompts, getActiveCategories, listPublicPrompts, normalizeCatalogFilters } from "../lib/catalog";
+import { countPublicPrompts, getCachedActiveCategories, getCachedHomepageCatalog, listPublicPrompts, normalizeCatalogFilters } from "../lib/catalog";
 import { getCurrentUser } from "../lib/auth";
 import { hasDatabaseUrl } from "../db";
 import { getMessages, isLocale } from "../lib/i18n";
@@ -80,12 +80,27 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
     );
   }
 
-  const [categories, prompts, total, mostViewed, mostHelpful, user] = await Promise.all([
-    getActiveCategories(),
-    listPublicPrompts(filters, hasFilters ? 18 : 12),
-    hasFilters ? countPublicPrompts(filters) : Promise.resolve(0),
-    hasFilters ? Promise.resolve([]) : listPublicPrompts({ order: "popular" }, 12),
-    hasFilters ? Promise.resolve([]) : listPublicPrompts({ order: "helpful" }, 12),
+  const catalogPromise = hasFilters
+    ? Promise.all([
+      getCachedActiveCategories(),
+      listPublicPrompts(filters, 18),
+      countPublicPrompts(filters),
+    ]).then(([categories, prompts, total]) => ({
+      categories,
+      prompts,
+      total,
+      mostViewed: [],
+      mostHelpful: [],
+    }))
+    : getCachedHomepageCatalog().then(({ activeCategories, newest, mostViewed, mostHelpful }) => ({
+      categories: activeCategories,
+      prompts: newest,
+      total: 0,
+      mostViewed,
+      mostHelpful,
+    }));
+  const [{ categories, prompts, total, mostViewed, mostHelpful }, user] = await Promise.all([
+    catalogPromise,
     getCurrentUser(),
   ]);
 
